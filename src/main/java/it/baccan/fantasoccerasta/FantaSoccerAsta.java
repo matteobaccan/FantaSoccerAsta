@@ -1,7 +1,10 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (c) 2019 Matteo Baccan
+ * http://www.baccan.it
+ * 
+ * Distributed under the GPL v3 software license, see the accompanying
+ * file LICENSE or http://www.gnu.org/licenses/gpl.html.
+ * 
  */
 package it.baccan.fantasoccerasta;
 
@@ -49,17 +52,12 @@ public class FantaSoccerAsta {
         // Cookie store
         BasicCookieStore cookieStore = new org.apache.http.impl.client.BasicCookieStore();
 
-        CookieSpecProvider csf = new CookieSpecProvider() {
+        CookieSpecProvider csf = (HttpContext context) -> new BrowserCompatSpec() {
             @Override
-            public CookieSpec create(HttpContext context) {
-                return new BrowserCompatSpec() {
-                    @Override
-                    public void validate(Cookie cookie, CookieOrigin origin)
-                            throws MalformedCookieException {
-                        // Allow all cookies
-                        log.debug("MalformedCookieException");
-                    }
-                };
+            public void validate(Cookie cookie, CookieOrigin origin)
+                    throws MalformedCookieException {
+                // Allow all cookies
+                log.debug("MalformedCookieException");
             }
         };
 
@@ -193,8 +191,12 @@ public class FantaSoccerAsta {
 
                     }
                 }
-                log.info("Scrivo rose");
-                scriviFile(rose.toString().getBytes(), "FantaSoccer-rose.csv");
+                
+                // In caso di debug scrivo le rose
+                if (log.isDebugEnabled()) {
+                    log.info("Scrivo rose");
+                    scriviFile(rose.toString().getBytes(), "FantaSoccer-rose.csv");
+                }
             } else {
                 log.error("Non trovo la lega privata");
             }
