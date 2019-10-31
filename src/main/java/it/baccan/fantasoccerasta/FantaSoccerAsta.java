@@ -191,7 +191,7 @@ public class FantaSoccerAsta {
 
                     }
                 }
-                
+
                 // In caso di debug scrivo le rose
                 if (log.isDebugEnabled()) {
                     log.info("Scrivo rose");
