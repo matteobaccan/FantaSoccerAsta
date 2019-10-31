@@ -1,3 +1,10 @@
+[![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/matteobaccan/FantaSoccerAsta.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/matteobaccan/FantaSoccerAsta/context:java)
+[![Coverage Status](https://coveralls.io/repos/github/matteobaccan/FantaSoccerAsta/badge.svg?branch=master)](https://coveralls.io/github/matteobaccan/FantaSoccerAsta?branch=master)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/matteobaccan/FantaSoccerAsta.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/matteobaccan/FantaSoccerAsta/alerts/)
+[![Build Status](https://travis-ci.org/matteobaccan/FantaSoccerAsta.svg?branch=master)](https://travis-ci.org/matteobaccan/FantaSoccerAsta)
+[![security status](https://www.meterian.io/badge/gh/matteobaccan/FantaSoccerAsta/security)](https://www.meterian.io/report/gh/matteobaccan/FantaSoccerAsta)
+[![stability status](https://www.meterian.io/badge/gh/matteobaccan/FantaSoccerAsta/stability)](https://www.meterian.io/report/gh/matteobaccan/FantaSoccerAsta)
+
 # FantaSoccerAsta
 Calcolo automatico liste Fanta.soccer
 
