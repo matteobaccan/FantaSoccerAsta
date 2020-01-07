@@ -149,21 +149,17 @@ public class FantaSoccerAsta {
                 cSQurl = cSQurl.substring(0, cSQurl.indexOf("/classifica/"));
 
                 // Ora cerco tutte le squadre
-                int nSQ = 0;
+                // Prendo il link alla pagina della lega privata
+                Document legaPageDoc = Jsoup.parse(legaPage);
+                Elements alp = legaPageDoc.getElementsByTag("a");
                 List<String> vSQ = new ArrayList<>();
-                while (true) {
-                    int nL1 = legaPage.indexOf(cSQurl + "/squadra/", nSQ);
-                    int nL2 = legaPage.indexOf("\"", nL1);
-                    if (nL1 == -1 || nL2 == -1) {
-                        break;
-                    }
-                    nL1 = legaPage.lastIndexOf("/", nL2 - 2);
-                    nSQ = nL2;
-
-                    String idsquadra = legaPage.substring(nL1 + 1, nL2 - 1);
-                    if (!vSQ.contains(idsquadra)) {
-                        vSQ.add(idsquadra);
-                        log.info("Aggiungo la squadra [{}]", idsquadra);
+                for (Element e : alp) {
+                    String idsquadra = e.attr("href");
+                    if (idsquadra.contains("/calciatori/") && idsquadra.startsWith("http")) {
+                        if (!vSQ.contains(idsquadra)) {
+                            vSQ.add(idsquadra);
+                            log.info("Aggiungo la squadra [{}]", idsquadra);
+                        }
                     }
                 }
 
@@ -171,24 +167,25 @@ public class FantaSoccerAsta {
                 StringBuilder rose = new StringBuilder();
                 for (String cSQ : vSQ) {
                     // Prendo la squadra
-                    String squadraURL = cSQurl + "/calciatori/" + cSQ;
+                    String squadraURL = cSQ;
                     log.info("Prendo la squadra [{}]", squadraURL);
                     String squadraPage = getPage(squadraURL);
 
                     Document doc = Jsoup.parse(squadraPage);
-                    Elements container_info = doc.getElementsByClass("container_info");
-                    for (Element e : container_info) {
+                    Elements infoFantacalciatore = doc.getElementsByClass("info-fantacalciatore");
+                    for (Element e : infoFantacalciatore) {
                         Element nomeElement = e.getElementsByClass("strong").first();
-                        String nome = nomeElement.text();
-                        String cCod = nomeElement.attr("href");
-                        cCod = cCod.substring("/it/seriea/".length());
-                        if (cCod.contains("/")) {
-                            cCod = cCod.substring(0, cCod.indexOf("/"));
-                            aCod.add(cCod);
-                            rose.append(String.format("\"%s\";\"%s\"\r\n", nome, cCod));
-                            log.info("{}-{}", cCod, nome);
+                        if (nomeElement != null) {
+                            String nome = nomeElement.text();
+                            String cCod = nomeElement.attr("href");
+                            cCod = cCod.substring("/it/seriea/".length());
+                            if (cCod.contains("/")) {
+                                cCod = cCod.substring(0, cCod.indexOf("/"));
+                                aCod.add(cCod);
+                                rose.append(String.format("\"%s\";\"%s\"\r\n", nome, cCod));
+                                log.info("{}-{}", cCod, nome);
+                            }
                         }
-
                     }
                 }
 
@@ -227,9 +224,12 @@ public class FantaSoccerAsta {
             log.info("Prendo le ultime statitiche [{}]", paginastatistiche);
             String calciatoriPage = getPage(paginastatistiche);
 
+            int tableStart = calciatoriPage.indexOf("<table class=\"table bg-default\" id=\"statistiche-calciatori\"");
+            calciatoriPage = calciatoriPage.substring(tableStart, calciatoriPage.indexOf("</table>", tableStart));
+
             int nPos = 0;
             while (true) {
-                int nGio1 = calciatoriPage.indexOf("<tr class=\"diecipxnero\" style=\"background-color: #f0f0f0;\">", nPos);
+                int nGio1 = calciatoriPage.indexOf("<tr>", nPos);
                 int nGio2 = calciatoriPage.indexOf("</tr>", nGio1);
                 if (nGio1 == -1 || nGio2 == -1) {
                     break;
@@ -240,47 +240,49 @@ public class FantaSoccerAsta {
                 Document docGiocatore = Jsoup.parse("<html><body><table>" + trGiocatore + "</table></body></html>");
                 Elements td = docGiocatore.getElementsByTag("td");
 
-                String cNome = td.get(1).text();
-                int n1 = cNome.indexOf("(");
-                int n2 = cNome.indexOf(")", n1);
-                String cRuolo = cNome.substring(n1 + 1, n2);
-                String cSQ = td.get(2).text();
-                String cFM = td.get(3).text();
-                String cPre = td.get(4).text();
-                String cEvidenza = "";
+                if (td.size() > 0) {
+                    String cNome = td.get(1).text();
+                    int n1 = cNome.indexOf("(");
+                    int n2 = cNome.indexOf(")", n1);
+                    String cRuolo = cNome.substring(n1 + 1, n2);
+                    String cSQ = td.get(2).text();
+                    String cFM = td.get(3).text();
+                    String cPre = td.get(4).text();
+                    String cEvidenza = "";
 
-                int nPre = 0;
-                double nFM;
-                try {
-                    nPre = Double.valueOf(cPre).intValue();
-                    nFM = Double.parseDouble(cFM.replace(",", "."));
-                    if (nPre > 14 && nFM > 6) {
-                        cEvidenza = "*";
+                    int nPre = 0;
+                    double nFM;
+                    try {
+                        nPre = Double.valueOf(cPre).intValue();
+                        nFM = Double.parseDouble(cFM.replace(",", "."));
+                        if (nPre > 14 && nFM > 6) {
+                            cEvidenza = "*";
+                        }
+                        if (nPre > 17 && nFM > 6) {
+                            cEvidenza = "**";
+                        }
+                        if (nPre > 20 && nFM > 6) {
+                            cEvidenza = "***";
+                        }
+                    } catch (Exception ex) {
+                        log.info("Errore", ex);
                     }
-                    if (nPre > 17 && nFM > 6) {
-                        cEvidenza = "**";
-                    }
-                    if (nPre > 20 && nFM > 6) {
-                        cEvidenza = "***";
-                    }
-                } catch (Exception ex) {
-                    log.info("Errore", ex);
-                }
 
-                String cCod = td.get(5).html();
-                int n3 = cCod.indexOf("/it/seriea/");
-                int n4 = cCod.indexOf("/", n3 + 12);
-                cCod = cCod.substring(n3 + 11, n4);
-                if (!aCod.contains(cCod) && nPre >= 0) {
-                    String s = String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"", cCod, cRuolo, cNome, cSQ, cFM, cPre, cEvidenza);
-                    if (cRuolo.equalsIgnoreCase("P")) {
-                        aP.add(s);
-                    } else if (cRuolo.equalsIgnoreCase("D")) {
-                        aD.add(s);
-                    } else if (cRuolo.equalsIgnoreCase("C")) {
-                        aC.add(s);
-                    } else if (cRuolo.equalsIgnoreCase("A")) {
-                        aA.add(s);
+                    String cCod = td.get(1).html();
+                    int n3 = cCod.indexOf("/it/seriea/");
+                    int n4 = cCod.indexOf("/", n3 + 12);
+                    cCod = cCod.substring(n3 + 11, n4);
+                    if (!aCod.contains(cCod) && nPre >= 0) {
+                        String s = String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"", cCod, cRuolo, cNome, cSQ, cFM, cPre, cEvidenza);
+                        if (cRuolo.equalsIgnoreCase("P")) {
+                            aP.add(s);
+                        } else if (cRuolo.equalsIgnoreCase("D")) {
+                            aD.add(s);
+                        } else if (cRuolo.equalsIgnoreCase("C")) {
+                            aC.add(s);
+                        } else if (cRuolo.equalsIgnoreCase("A")) {
+                            aA.add(s);
+                        }
                     }
                 }
             }
