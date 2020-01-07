@@ -155,11 +155,9 @@ public class FantaSoccerAsta {
                 List<String> vSQ = new ArrayList<>();
                 for (Element e : alp) {
                     String idsquadra = e.attr("href");
-                    if (idsquadra.contains("/calciatori/") && idsquadra.startsWith("http")) {
-                        if (!vSQ.contains(idsquadra)) {
-                            vSQ.add(idsquadra);
-                            log.info("Aggiungo la squadra [{}]", idsquadra);
-                        }
+                    if (idsquadra.contains("/calciatori/") && idsquadra.startsWith("http") && !vSQ.contains(idsquadra)) {
+                        vSQ.add(idsquadra);
+                        log.info("Aggiungo la squadra [{}]", idsquadra);
                     }
                 }
 
