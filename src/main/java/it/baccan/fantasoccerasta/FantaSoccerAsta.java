@@ -341,11 +341,9 @@ public class FantaSoccerAsta {
     }
 
     private void scriviFile(byte[] buffer, String cFile) {
-        try {
-            RandomAccessFile RAF = new RandomAccessFile(cFile, "rw");
+        try (RandomAccessFile RAF = new RandomAccessFile(cFile, "rw")) {
             RAF.write(buffer, 0, buffer.length);
             RAF.setLength(buffer.length);
-            RAF.close();
         } catch (Exception ex) {
             log.error("Errore di scrittura file", ex);
         }
