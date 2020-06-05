@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration packagingData="true">
+
+    <!--
+        %d{yyyy-MM-dd HH:mm:ss.SSS} = data con millisecondi
+        [%thread] = thread
+        %logger{35} = classe
+        %-5level = livello di log
+        %msg%n = messaggio e parametri aggiuntivi
+    -->
+    <property name="logpattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} | %-20.20thread | %-5level | %-5.5line | %-20.20logger{0} | %msg%n"/>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS}|%-5level|%-20.20logger{0}|%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="fantasoccerastalog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>FantaSoccerAsta.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>FantaSoccerAsta.%i.log.zip</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>20</maxIndex>
+        </rollingPolicy>
+
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>10MB</maxFileSize>
+        </triggeringPolicy>
+
+        <encoder>
+            <pattern>${logpattern}</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="it.baccan" level="debug" additivity="false">
+        <appender-ref ref="console" />
+        <appender-ref ref="fantasoccerastalog" />
+    </logger>
+
+    <root level="error">
+        <appender-ref ref="console" />
+    </root>
+
+    <logger name="org.apache.http.client.protocol" level="info" additivity="false">
+        <appender-ref ref="fantasoccerastalog" />
+    </logger>
+
+</configuration>
