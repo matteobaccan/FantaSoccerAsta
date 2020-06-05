@@ -1,18 +1,20 @@
 /*
  * Copyright (c) 2019 Matteo Baccan
  * http://www.baccan.it
- * 
+ *
  * Distributed under the GPL v3 software license, see the accompanying
  * file LICENSE or http://www.gnu.org/licenses/gpl.html.
- * 
+ *
  */
 package it.baccan.fantasoccerasta;
 
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.config.RegistryBuilder;
@@ -81,7 +83,6 @@ public class FantaSoccerAsta {
     }
 
     /**
-     *
      * @param cName
      * @param cPassword
      * @param cMercato
@@ -316,7 +317,6 @@ public class FantaSoccerAsta {
     }
 
     /**
-     *
      * @param args
      */
     public static void main(String[] args) {
