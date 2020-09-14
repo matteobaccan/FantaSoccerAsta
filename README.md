@@ -9,6 +9,7 @@
 [![DepShield Badge](https://depshield.sonatype.org/badges/matteobaccan/FantaSoccerAsta/depshield.svg)](https://depshield.github.io)
 
 ![Java CI with Maven](https://github.com/matteobaccan/FantaSoccerAsta/workflows/Java%20CI%20with%20Maven/badge.svg)
+![Meterian vulnerability scan workflow](https://github.com/matteobaccan/FantaSoccerAsta/workflows/Meterian%20vulnerability%20scan%20workflow/badge.svg)
 
 Calcolo automatico liste Fanta.soccer
 
