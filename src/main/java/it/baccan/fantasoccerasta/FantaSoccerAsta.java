@@ -83,11 +83,18 @@ public class FantaSoccerAsta {
     }
 
     /**
-     * @param cName
-     * @param cPassword
-     * @param cMercato
+     * Constructor.
      */
-    public FantaSoccerAsta(String cName, String cPassword, String cMercato) {
+    public FantaSoccerAsta() {
+    }
+
+    /**
+     * Esegue l'analisi di mercato.
+     *
+     * @param username
+     * @param password
+     */
+    public void run(final String username, final String password) {
         try {
             log.info("Login");
             // Chiamo la login per avere il cookie di sessione
@@ -116,9 +123,13 @@ public class FantaSoccerAsta {
                     .field("__VIEWSTATE", cV)
                     .field("__VIEWSTATEGENERATOR", cE)
                     .field("ctl00$MainContent$wuc_Login1$btnLogin", "accedi")
-                    .field("ctl00$MainContent$wuc_Login1$username", cName)
-                    .field("ctl00$MainContent$wuc_Login1$password", cPassword)
+                    .field("ctl00$MainContent$wuc_Login1$username", username)
+                    .field("ctl00$MainContent$wuc_Login1$password", password)
                     .asString();
+
+            if (homePage.getStatus() != 200) {
+                log.error("Errore di login");
+            }
 
             // Prendo la lega privata
             String legaprivataPage = getPage(SITEHOME + "/it/lega/privata/");
@@ -145,9 +156,6 @@ public class FantaSoccerAsta {
 
                 // Prendo la lega
                 String legaPage = getPage(cSQurl);
-
-                // Prendo la URL base
-                cSQurl = cSQurl.substring(0, cSQurl.indexOf("/classifica/"));
 
                 // Ora cerco tutte le squadre
                 // Prendo il link alla pagina della lega privata
@@ -195,6 +203,7 @@ public class FantaSoccerAsta {
                 }
             } else {
                 log.error("Non trovo la lega privata");
+                System.exit(1);
             }
 
             // Ora scarico la statistica 2011-2012 e ordino per i migliori dell'anno
@@ -337,7 +346,8 @@ public class FantaSoccerAsta {
 
         JOptionPane.showConfirmDialog(null, panel, "login", JOptionPane.OK_CANCEL_OPTION);
 
-        FantaSoccerAsta engine = new FantaSoccerAsta(username.getText(), new String(password.getPassword()), "");
+        FantaSoccerAsta engine = new FantaSoccerAsta();
+        engine.run(username.getText(), new String(password.getPassword()));
     }
 
     private void scriviFile(byte[] buffer, String cFile) {
