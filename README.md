@@ -8,6 +8,8 @@
 [![stability status](https://www.meterian.io/badge/gh/matteobaccan/FantaSoccerAsta/stability)](https://www.meterian.io/report/gh/matteobaccan/FantaSoccerAsta)
 [![DepShield Badge](https://depshield.sonatype.org/badges/matteobaccan/FantaSoccerAsta/depshield.svg)](https://depshield.github.io)
 
+![Java CI with Maven](https://github.com/matteobaccan/FantaSoccerAsta/workflows/Java%20CI%20with%20Maven/badge.svg)
+
 Calcolo automatico liste Fanta.soccer
 
 ## Il problema
