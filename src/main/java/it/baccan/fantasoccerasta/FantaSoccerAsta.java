@@ -83,12 +83,6 @@ public class FantaSoccerAsta {
     }
 
     /**
-     * Constructor.
-     */
-    public FantaSoccerAsta() {
-    }
-
-    /**
      * Esegue l'analisi di mercato.
      *
      * @param username
@@ -97,231 +91,18 @@ public class FantaSoccerAsta {
     public void run(final String username, final String password) {
         try {
             log.info("Login");
-            // Chiamo la login per avere il cookie di sessione
-            HttpResponse<String> loginPage = Unirest.get(SITEHOME + "/it/login/")
-                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                    .header("User-Agent", USERAGENT)
-                    .asString();
 
-            // Prendo __VIEWSTATEGENERATOR e __VIEWSTATE
-            Document loginDoc = Jsoup.parse(loginPage.getBody());
+            // Login e get dei Cookie
+            doLogin(username, password);
 
-            Element __VIEWSTATEGENERATOR = loginDoc.getElementsByAttributeValue("name", "__VIEWSTATEGENERATOR").first();
-            String cE = __VIEWSTATEGENERATOR.attr("value");
+            // Prendo i giocatori della lega
+            List<String> aCod = goGetPlayers();
 
-            Element __VIEWSTATE = loginDoc.getElementsByAttributeValue("name", "__VIEWSTATE").first();
-            String cV = __VIEWSTATE.attr("value");
-
-            log.info("Homepage");
-            // Faccio la post di login
-            HttpResponse<String> homePage = Unirest.post(SITEHOME + "/it/login/")
-                    .queryString("lang", "it")
-                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                    .header("User-Agent", USERAGENT)
-                    .field("__EVENTARGUMENT", "")
-                    .field("__EVENTTARGET", "")
-                    .field("__VIEWSTATE", cV)
-                    .field("__VIEWSTATEGENERATOR", cE)
-                    .field("ctl00$MainContent$wuc_Login1$btnLogin", "accedi")
-                    .field("ctl00$MainContent$wuc_Login1$username", username)
-                    .field("ctl00$MainContent$wuc_Login1$password", password)
-                    .asString();
-
-            if (homePage.getStatus() != 200) {
-                log.error("Errore di login");
-            }
-
-            // Prendo la lega privata
-            String legaprivataPage = getPage(SITEHOME + "/it/lega/privata/");
-
-            // Prendo il link alla pagina della lega privata
-            Document legaprivataDoc = Jsoup.parse(legaprivataPage);
-            Elements a = legaprivataDoc.getElementsByTag("a");
-            String hrefLegaPrivata = "";
-            for (Element e : a) {
-                String href = e.attr("href");
-                if (href.startsWith("/it/lega/privata/") && href.contains("/homelega/")) {
-                    hrefLegaPrivata = href;
-                    break;
-                }
-            }
-
-            // Prendo i giocatori gia' in organico
-            List<String> aCod = new ArrayList<>();
-            if (!hrefLegaPrivata.isEmpty()) {
-                String cSQurl = SITEHOME + hrefLegaPrivata;
-
-                log.info("Prendo i dati della lega privata [{}]", cSQurl);
-                cSQurl = cSQurl.substring(0, cSQurl.indexOf("/homelega/")) + "/classifica/";
-
-                // Prendo la lega
-                String legaPage = getPage(cSQurl);
-
-                // Ora cerco tutte le squadre
-                // Prendo il link alla pagina della lega privata
-                Document legaPageDoc = Jsoup.parse(legaPage);
-                Elements alp = legaPageDoc.getElementsByTag("a");
-                List<String> vSQ = new ArrayList<>();
-                for (Element e : alp) {
-                    String idsquadra = e.attr("href");
-                    if (idsquadra.contains("/calciatori/") && idsquadra.startsWith("http") && !vSQ.contains(idsquadra)) {
-                        vSQ.add(idsquadra);
-                        log.info("Aggiungo la squadra [{}]", idsquadra);
-                    }
-                }
-
-                // Estraggo i giocatori
-                StringBuilder rose = new StringBuilder();
-                for (String cSQ : vSQ) {
-                    // Prendo la squadra
-                    String squadraURL = cSQ;
-                    log.info("Prendo la squadra [{}]", squadraURL);
-                    String squadraPage = getPage(squadraURL);
-
-                    Document doc = Jsoup.parse(squadraPage);
-                    Elements infoFantacalciatore = doc.getElementsByClass("info-fantacalciatore");
-                    for (Element e : infoFantacalciatore) {
-                        Element nomeElement = e.getElementsByClass("strong").first();
-                        if (nomeElement != null) {
-                            String nome = nomeElement.text();
-                            String cCod = nomeElement.attr("href");
-                            cCod = cCod.substring("/it/seriea/".length());
-                            if (cCod.contains("/")) {
-                                cCod = cCod.substring(0, cCod.indexOf("/"));
-                                aCod.add(cCod);
-                                rose.append(String.format("\"%s\";\"%s\"\r\n", nome, cCod));
-                                log.info("{}-{}", cCod, nome);
-                            }
-                        }
-                    }
-                }
-
-                // In caso di debug scrivo le rose
-                if (log.isDebugEnabled()) {
-                    log.info("Scrivo rose");
-                    scriviFile(rose.toString().getBytes(), "FantaSoccer-rose.csv");
-                }
-            } else {
-                log.error("Non trovo la lega privata");
-                System.exit(1);
-            }
-
-            // Ora scarico la statistica 2011-2012 e ordino per i migliori dell'anno
-            ArrayList<String> aP = new ArrayList<>();
-            ArrayList<String> aD = new ArrayList<>();
-            ArrayList<String> aC = new ArrayList<>();
-            ArrayList<String> aA = new ArrayList<>();
-
-            // Prendo la squadra
-            log.info("Prendo la pagina delle statistiche");
-            String statistichePage = getPage(SITEHOME + "/it/statistiche/");
-
-            int nPosFS1 = statistichePage.indexOf("<select name=\"ctl00$MainContent$wuc_Default1$cmbGiornata\"");
-            String select = "<option selected=\"selected\" value=\"";
-            nPosFS1 = statistichePage.indexOf(select, nPosFS1);
-            int nPosFS2 = statistichePage.indexOf("\"", nPosFS1 + select.length());
-            String fs = statistichePage.substring(nPosFS1 + select.length(), nPosFS2);
-
-            nPosFS1 = statistichePage.indexOf("<select name=\"ctl00$MainContent$wuc_Default1$cmbStagione\"");
-            select = "<option selected=\"selected\" value=\"";
-            nPosFS1 = statistichePage.indexOf(select, nPosFS1);
-            nPosFS2 = statistichePage.indexOf("\"", nPosFS1 + select.length());
-            String stagione = statistichePage.substring(nPosFS1 + select.length(), nPosFS2);
-
-            String paginastatistiche = SITEHOME + "/it/statistiche/A/" + stagione + "/Tutti/Fantamedia/Full/fs/" + fs + "/";
-            log.info("Prendo le ultime statitiche [{}]", paginastatistiche);
-            String calciatoriPage = getPage(paginastatistiche);
-
-            int tableStart = calciatoriPage.indexOf("<table class=\"table bg-default\" id=\"statistiche-calciatori\"");
-            calciatoriPage = calciatoriPage.substring(tableStart, calciatoriPage.indexOf("</table>", tableStart));
-
-            int nPos = 0;
-            while (true) {
-                int nGio1 = calciatoriPage.indexOf("<tr>", nPos);
-                int nGio2 = calciatoriPage.indexOf("</tr>", nGio1);
-                if (nGio1 == -1 || nGio2 == -1) {
-                    break;
-                }
-                nPos = nGio2;
-
-                String trGiocatore = calciatoriPage.substring(nGio1, nGio2 + 5);
-                Document docGiocatore = Jsoup.parse("<html><body><table>" + trGiocatore + "</table></body></html>");
-                Elements td = docGiocatore.getElementsByTag("td");
-
-                if (td.size() > 0) {
-                    String cNome = td.get(1).text();
-                    int n1 = cNome.indexOf("(");
-                    int n2 = cNome.indexOf(")", n1);
-                    String cRuolo = cNome.substring(n1 + 1, n2);
-                    String cSQ = td.get(2).text();
-                    String cFM = td.get(3).text();
-                    String cPre = td.get(4).text();
-                    String cEvidenza = "";
-
-                    int nPre = 0;
-                    double nFM;
-                    try {
-                        nPre = Double.valueOf(cPre).intValue();
-                        nFM = Double.parseDouble(cFM.replace(",", "."));
-                        if (nPre > 14 && nFM > 6) {
-                            cEvidenza = "*";
-                        }
-                        if (nPre > 17 && nFM > 6) {
-                            cEvidenza = "**";
-                        }
-                        if (nPre > 20 && nFM > 6) {
-                            cEvidenza = "***";
-                        }
-                    } catch (Exception ex) {
-                        log.info("Errore", ex);
-                    }
-
-                    String cCod = td.get(1).html();
-                    int n3 = cCod.indexOf("/it/seriea/");
-                    int n4 = cCod.indexOf("/", n3 + 12);
-                    cCod = cCod.substring(n3 + 11, n4);
-                    if (!aCod.contains(cCod) && nPre >= 0) {
-                        String s = String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"", cCod, cRuolo, cNome, cSQ, cFM, cPre, cEvidenza);
-                        if (cRuolo.equalsIgnoreCase("P")) {
-                            aP.add(s);
-                        } else if (cRuolo.equalsIgnoreCase("D")) {
-                            aD.add(s);
-                        } else if (cRuolo.equalsIgnoreCase("C")) {
-                            aC.add(s);
-                        } else if (cRuolo.equalsIgnoreCase("A")) {
-                            aA.add(s);
-                        }
-                    }
-                }
-            }
-
-            // Esporto i risultati
-            StringBuilder svincolati = new StringBuilder();
-            svincolati.append("Elenco giocatori svincolati per ruolo\r\n").append("\r\n").append("Portieri\r\n");
-            aP.forEach((s) -> {
-                svincolati.append(s).append("\r\n");
-            });
-
-            svincolati.append("\r\n").append("Difensori\r\n");
-            aD.forEach((s) -> {
-                svincolati.append(s).append("\r\n");
-            });
-
-            svincolati.append("\r\n").append("Centrocapisti\r\n");
-            aC.forEach((s) -> {
-                svincolati.append(s).append("\r\n");
-            });
-
-            svincolati.append("\r\n").append("Attaccanti\r\n");
-            aA.forEach((s) -> {
-                svincolati.append(s).append("\r\n");
-            });
-
-            log.info("Scrivo svincolati");
-            scriviFile(svincolati.toString().getBytes(), "FantaSoccer-svincolati.csv");
+            // Genero il report
+            doGenerateReport(aCod);
 
         } catch (Exception ex) {
-            log.error("Errore di generazione svincolati file", ex);
+            log.error("Errore di elaborazione", ex);
         }
     }
 
@@ -344,7 +125,7 @@ public class FantaSoccerAsta {
         controls.add(password);
         panel.add(controls, BorderLayout.CENTER);
 
-        JOptionPane.showConfirmDialog(null, panel, "login", JOptionPane.OK_CANCEL_OPTION);
+        JOptionPane.showConfirmDialog(null, panel, "Fanta.soccer login", JOptionPane.OK_CANCEL_OPTION);
 
         FantaSoccerAsta engine = new FantaSoccerAsta();
         engine.run(username.getText(), new String(password.getPassword()));
@@ -359,12 +140,239 @@ public class FantaSoccerAsta {
         }
     }
 
-    private String getPage(String url) throws UnirestException {
+    private String getPage(final String url) throws UnirestException {
         return Unirest.get(url)
                 .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
                 .header("User-Agent", USERAGENT)
                 .asString()
                 .getBody();
+    }
+
+    private void doLogin(final String username, final String password) throws UnirestException, Exception {
+        // Chiamo la login per avere il cookie di sessione
+        String login = getPage(SITEHOME + "/it/login/");
+
+        // Prendo __VIEWSTATEGENERATOR e __VIEWSTATE
+        Document loginDoc = Jsoup.parse(login);
+
+        Element __VIEWSTATEGENERATOR = loginDoc.getElementsByAttributeValue("name", "__VIEWSTATEGENERATOR").first();
+        String cE = __VIEWSTATEGENERATOR.attr("value");
+
+        Element __VIEWSTATE = loginDoc.getElementsByAttributeValue("name", "__VIEWSTATE").first();
+        String cV = __VIEWSTATE.attr("value");
+
+        log.info("Homepage");
+        // Faccio la post di login
+        HttpResponse<String> homePage = Unirest.post(SITEHOME + "/it/login/")
+                .queryString("lang", "it")
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .header("User-Agent", USERAGENT)
+                .field("__EVENTARGUMENT", "")
+                .field("__EVENTTARGET", "")
+                .field("__VIEWSTATE", cV)
+                .field("__VIEWSTATEGENERATOR", cE)
+                .field("ctl00$MainContent$wuc_Login1$btnLogin", "accedi")
+                .field("ctl00$MainContent$wuc_Login1$username", username)
+                .field("ctl00$MainContent$wuc_Login1$password", password)
+                .asString();
+
+        if (homePage.getStatus() != 200) {
+            throw new Exception("Errore di login");
+        }
+    }
+
+    private List<String> goGetPlayers() throws UnirestException, Exception {
+        List<String> aCod = new ArrayList<>();
+
+        // Prendo la lega privata
+        String legaprivataPage = getPage(SITEHOME + "/it/lega/privata/");
+
+        // Prendo il link alla pagina della lega privata
+        Document legaprivataDoc = Jsoup.parse(legaprivataPage);
+        Elements a = legaprivataDoc.getElementsByTag("a");
+        String hrefLegaPrivata = "";
+        for (Element e : a) {
+            String href = e.attr("href");
+            if (href.startsWith("/it/lega/privata/") && href.contains("/homelega/")) {
+                hrefLegaPrivata = href;
+                break;
+            }
+        }
+
+        // Prendo i giocatori gia' in organico
+        if (!hrefLegaPrivata.isEmpty()) {
+            String cSQurl = SITEHOME + hrefLegaPrivata;
+
+            log.info("Prendo i dati della lega privata [{}]", cSQurl);
+            cSQurl = cSQurl.substring(0, cSQurl.indexOf("/homelega/")) + "/classifica/";
+
+            // Prendo la lega
+            String legaPage = getPage(cSQurl);
+
+            // Ora cerco tutte le squadre
+            // Prendo il link alla pagina della lega privata
+            Document legaPageDoc = Jsoup.parse(legaPage);
+            Elements alp = legaPageDoc.getElementsByTag("a");
+            List<String> vSQ = new ArrayList<>();
+            for (Element e : alp) {
+                String idsquadra = e.attr("href");
+                if (idsquadra.contains("/calciatori/") && idsquadra.startsWith("http") && !vSQ.contains(idsquadra)) {
+                    vSQ.add(idsquadra);
+                    log.info("Aggiungo la squadra [{}]", idsquadra);
+                }
+            }
+
+            // Estraggo i giocatori
+            StringBuilder rose = new StringBuilder();
+            for (String cSQ : vSQ) {
+                // Prendo la squadra
+                String squadraURL = cSQ;
+                log.info("Prendo la squadra [{}]", squadraURL);
+                String squadraPage = getPage(squadraURL);
+
+                Document doc = Jsoup.parse(squadraPage);
+                Elements infoFantacalciatore = doc.getElementsByClass("info-fantacalciatore");
+                for (Element e : infoFantacalciatore) {
+                    Element nomeElement = e.getElementsByClass("strong").first();
+                    if (nomeElement != null) {
+                        String nome = nomeElement.text();
+                        String cCod = nomeElement.attr("href");
+                        cCod = cCod.substring("/it/seriea/".length());
+                        if (cCod.contains("/")) {
+                            cCod = cCod.substring(0, cCod.indexOf("/"));
+                            aCod.add(cCod);
+                            rose.append(String.format("\"%s\";\"%s\"\r\n", nome, cCod));
+                            log.info("{}-{}", cCod, nome);
+                        }
+                    }
+                }
+            }
+
+            // In caso di debug scrivo le rose
+            if (log.isDebugEnabled()) {
+                log.info("Scrivo rose");
+                scriviFile(rose.toString().getBytes(), "FantaSoccer-rose.csv");
+            }
+        } else {
+            throw new Exception("Non trovo la lega privata");
+        }
+        return aCod;
+    }
+
+    private void doGenerateReport(final List<String> aCod) throws UnirestException {
+        // Ora scarico la statistica 2011-2012 e ordino per i migliori dell'anno
+        ArrayList<String> aP = new ArrayList<>();
+        ArrayList<String> aD = new ArrayList<>();
+        ArrayList<String> aC = new ArrayList<>();
+        ArrayList<String> aA = new ArrayList<>();
+
+        // Prendo la squadra
+        log.info("Prendo la pagina delle statistiche");
+        String statistichePage = getPage(SITEHOME + "/it/statistiche/");
+
+        int nPosFS1 = statistichePage.indexOf("<select name=\"ctl00$MainContent$wuc_Default1$cmbGiornata\"");
+        String select = "<option selected=\"selected\" value=\"";
+        nPosFS1 = statistichePage.indexOf(select, nPosFS1);
+        int nPosFS2 = statistichePage.indexOf("\"", nPosFS1 + select.length());
+        String fs = statistichePage.substring(nPosFS1 + select.length(), nPosFS2);
+
+        nPosFS1 = statistichePage.indexOf("<select name=\"ctl00$MainContent$wuc_Default1$cmbStagione\"");
+        select = "<option selected=\"selected\" value=\"";
+        nPosFS1 = statistichePage.indexOf(select, nPosFS1);
+        nPosFS2 = statistichePage.indexOf("\"", nPosFS1 + select.length());
+        String stagione = statistichePage.substring(nPosFS1 + select.length(), nPosFS2);
+
+        String paginastatistiche = SITEHOME + "/it/statistiche/A/" + stagione + "/Tutti/Fantamedia/Full/fs/" + fs + "/";
+        log.info("Prendo le ultime statitiche [{}]", paginastatistiche);
+        String calciatoriPage = getPage(paginastatistiche);
+
+        int tableStart = calciatoriPage.indexOf("<table class=\"table bg-default\" id=\"statistiche-calciatori\"");
+        calciatoriPage = calciatoriPage.substring(tableStart, calciatoriPage.indexOf("</table>", tableStart));
+
+        int nPos = 0;
+        while (true) {
+            int nGio1 = calciatoriPage.indexOf("<tr>", nPos);
+            int nGio2 = calciatoriPage.indexOf("</tr>", nGio1);
+            if (nGio1 == -1 || nGio2 == -1) {
+                break;
+            }
+            nPos = nGio2;
+
+            String trGiocatore = calciatoriPage.substring(nGio1, nGio2 + 5);
+            Document docGiocatore = Jsoup.parse("<html><body><table>" + trGiocatore + "</table></body></html>");
+            Elements td = docGiocatore.getElementsByTag("td");
+
+            if (td.size() > 0) {
+                String cNome = td.get(1).text();
+                int n1 = cNome.indexOf("(");
+                int n2 = cNome.indexOf(")", n1);
+                String cRuolo = cNome.substring(n1 + 1, n2);
+                String cSQ = td.get(2).text();
+                String cFM = td.get(3).text();
+                String cPre = td.get(4).text();
+                String cEvidenza = "";
+
+                int nPre = 0;
+                double nFM;
+                try {
+                    nPre = Double.valueOf(cPre).intValue();
+                    nFM = Double.parseDouble(cFM.replace(",", "."));
+                    if (nPre > 14 && nFM > 6) {
+                        cEvidenza = "*";
+                    }
+                    if (nPre > 17 && nFM > 6) {
+                        cEvidenza = "**";
+                    }
+                    if (nPre > 20 && nFM > 6) {
+                        cEvidenza = "***";
+                    }
+                } catch (NumberFormatException ex) {
+                    log.info("Errore", ex);
+                }
+
+                String cCod = td.get(1).html();
+                int n3 = cCod.indexOf("/it/seriea/");
+                int n4 = cCod.indexOf("/", n3 + 12);
+                cCod = cCod.substring(n3 + 11, n4);
+                if (!aCod.contains(cCod) && nPre >= 0) {
+                    String s = String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"", cCod, cRuolo, cNome, cSQ, cFM, cPre, cEvidenza);
+                    if (cRuolo.equalsIgnoreCase("P")) {
+                        aP.add(s);
+                    } else if (cRuolo.equalsIgnoreCase("D")) {
+                        aD.add(s);
+                    } else if (cRuolo.equalsIgnoreCase("C")) {
+                        aC.add(s);
+                    } else if (cRuolo.equalsIgnoreCase("A")) {
+                        aA.add(s);
+                    }
+                }
+            }
+        }
+
+        // Esporto i risultati
+        StringBuilder svincolati = new StringBuilder();
+        svincolati.append("Elenco giocatori svincolati per ruolo\r\n").append("\r\n").append("Portieri\r\n");
+        aP.forEach((s) -> {
+            svincolati.append(s).append("\r\n");
+        });
+
+        svincolati.append("\r\n").append("Difensori\r\n");
+        aD.forEach((s) -> {
+            svincolati.append(s).append("\r\n");
+        });
+
+        svincolati.append("\r\n").append("Centrocapisti\r\n");
+        aC.forEach((s) -> {
+            svincolati.append(s).append("\r\n");
+        });
+
+        svincolati.append("\r\n").append("Attaccanti\r\n");
+        aA.forEach((s) -> {
+            svincolati.append(s).append("\r\n");
+        });
+
+        log.info("Scrivo svincolati");
+        scriviFile(svincolati.toString().getBytes(), "FantaSoccer-svincolati.csv");
     }
 
 }
