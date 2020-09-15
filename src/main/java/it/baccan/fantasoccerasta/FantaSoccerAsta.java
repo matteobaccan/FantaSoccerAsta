@@ -148,7 +148,7 @@ public class FantaSoccerAsta {
                 .getBody();
     }
 
-    private void doLogin(final String username, final String password) throws UnirestException, Exception {
+    private void doLogin(final String username, final String password) throws UnirestException, FantaException {
         // Chiamo la login per avere il cookie di sessione
         String login = getPage(SITEHOME + "/it/login/");
 
@@ -177,27 +177,15 @@ public class FantaSoccerAsta {
                 .asString();
 
         if (homePage.getStatus() != 200) {
-            throw new Exception("Errore di login");
+            throw new FantaException("Errore di login");
         }
     }
 
-    private List<String> goGetPlayers() throws UnirestException, Exception {
+    private List<String> goGetPlayers() throws UnirestException, FantaException {
         List<String> aCod = new ArrayList<>();
 
         // Prendo la lega privata
-        String legaprivataPage = getPage(SITEHOME + "/it/lega/privata/");
-
-        // Prendo il link alla pagina della lega privata
-        Document legaprivataDoc = Jsoup.parse(legaprivataPage);
-        Elements a = legaprivataDoc.getElementsByTag("a");
-        String hrefLegaPrivata = "";
-        for (Element e : a) {
-            String href = e.attr("href");
-            if (href.startsWith("/it/lega/privata/") && href.contains("/homelega/")) {
-                hrefLegaPrivata = href;
-                break;
-            }
-        }
+        String hrefLegaPrivata = doGetLegaPrivata();
 
         // Prendo i giocatori gia' in organico
         if (!hrefLegaPrivata.isEmpty()) {
@@ -250,11 +238,11 @@ public class FantaSoccerAsta {
 
             // In caso di debug scrivo le rose
             if (log.isDebugEnabled()) {
-                log.info("Scrivo rose");
+                log.debug("Scrivo rose");
                 scriviFile(rose.toString().getBytes(), "FantaSoccer-rose.csv");
             }
         } else {
-            throw new Exception("Non trovo la lega privata");
+            throw new FantaException("Non trovo la lega privata");
         }
         return aCod;
     }
@@ -350,6 +338,28 @@ public class FantaSoccerAsta {
         }
 
         // Esporto i risultati
+        goGeneraSvincolati(aP, aD, aC, aA);
+    }
+
+    private String doGetLegaPrivata() throws UnirestException {
+        String legaprivataPage = getPage(SITEHOME + "/it/lega/privata/");
+
+        // Prendo il link alla pagina della lega privata
+        Document legaprivataDoc = Jsoup.parse(legaprivataPage);
+        Elements a = legaprivataDoc.getElementsByTag("a");
+        String hrefLegaPrivata = "";
+        for (Element e : a) {
+            String href = e.attr("href");
+            if (href.startsWith("/it/lega/privata/") && href.contains("/homelega/")) {
+                hrefLegaPrivata = href;
+                break;
+            }
+        }
+
+        return hrefLegaPrivata;
+    }
+
+    private void goGeneraSvincolati(final ArrayList<String> aP, final ArrayList<String> aD, final ArrayList<String> aC, final ArrayList<String> aA) {
         StringBuilder svincolati = new StringBuilder();
         svincolati.append("Elenco giocatori svincolati per ruolo\r\n").append("\r\n").append("Portieri\r\n");
         aP.forEach((s) -> {
@@ -373,6 +383,7 @@ public class FantaSoccerAsta {
 
         log.info("Scrivo svincolati");
         scriviFile(svincolati.toString().getBytes(), "FantaSoccer-svincolati.csv");
+
     }
 
 }
