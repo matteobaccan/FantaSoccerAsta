@@ -242,7 +242,7 @@ public class FantaSoccerAsta {
                 scriviFile(rose.toString().getBytes(), "FantaSoccer-rose.csv");
             }
         } else {
-            throw new FantaException("Non trovo la lega privata");
+            log.info("Non trovo una lega privata da usare come parametro di filtraggio");
         }
         return aCod;
     }
