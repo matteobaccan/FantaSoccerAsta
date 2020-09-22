@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Matteo Baccan
+ * Author Matteo Baccan
  * http://www.baccan.it
  *
  * Distributed under the GPL v3 software license, see the accompanying
