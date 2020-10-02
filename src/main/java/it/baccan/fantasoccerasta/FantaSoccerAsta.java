@@ -46,7 +46,7 @@ import javax.swing.SwingConstants;
 @Slf4j
 public class FantaSoccerAsta {
 
-    private static final String SITEHOME = "http://www.fanta.soccer";
+    private static final String SITEHOME = "https://www.fanta.soccer";
     private static final String USERAGENT = "Mozilla/5.0 (Windows NT 6.1; rv:52.0) Gecko/20100101 Firefox/52.0";
 
     static {
@@ -98,8 +98,14 @@ public class FantaSoccerAsta {
             // Prendo i giocatori della lega
             List<String> aCod = goGetPlayers();
 
+            // Prendo i giocatori della lega
+            List<String> aIng = goGetInjured();
+
+            // Prendo i giocatori della lega
+            List<String> aRig = getRigoristi();
+
             // Genero il report
-            doGenerateReport(aCod);
+            doGenerateReport(aCod, aIng, aRig);
 
         } catch (Exception ex) {
             log.error("Errore di elaborazione", ex);
@@ -132,7 +138,7 @@ public class FantaSoccerAsta {
     }
 
     private void scriviFile(byte[] buffer, String cFile) {
-        try (RandomAccessFile RAF = new RandomAccessFile(cFile, "rw")) {
+        try ( RandomAccessFile RAF = new RandomAccessFile(cFile, "rw")) {
             RAF.write(buffer, 0, buffer.length);
             RAF.setLength(buffer.length);
         } catch (Exception ex) {
@@ -247,7 +253,9 @@ public class FantaSoccerAsta {
         return aCod;
     }
 
-    private void doGenerateReport(final List<String> aCod) throws UnirestException {
+    private void doGenerateReport(final List<String> aCod,
+            final List<String> aInj,
+            final List<String> aRig) throws UnirestException {
         // Ora scarico la statistica 2011-2012 e ordino per i migliori dell'anno
         ArrayList<String> aP = new ArrayList<>();
         ArrayList<String> aD = new ArrayList<>();
@@ -291,10 +299,12 @@ public class FantaSoccerAsta {
             Elements td = docGiocatore.getElementsByTag("td");
 
             if (td.size() > 0) {
-                String cNome = td.get(1).text();
-                int n1 = cNome.indexOf("(");
-                int n2 = cNome.indexOf(")", n1);
-                String cRuolo = cNome.substring(n1 + 1, n2);
+                String nome = td.get(1).text();
+                int n1 = nome.indexOf("(");
+                int n2 = nome.indexOf(")", n1);
+                String ruolo = nome.substring(n1 + 1, n2);
+                nome = nome.substring(0, n1).trim();
+
                 String cSQ = td.get(2).text();
                 String cFM = td.get(3).text();
                 String cPre = td.get(4).text();
@@ -322,15 +332,28 @@ public class FantaSoccerAsta {
                 int n3 = cCod.indexOf("/it/seriea/");
                 int n4 = cCod.indexOf("/", n3 + 12);
                 cCod = cCod.substring(n3 + 11, n4);
+
+                String infortunato = "";
+                if (aInj.contains(cCod)) {
+                    infortunato = "INFORTUNATO";
+                }
+
+                String rigorista = "";
+                for (String rig : aRig) {
+                    if (rig.toUpperCase().contains(nome.toUpperCase())) {
+                        rigorista = "RIGORISTA";
+                    }
+                }
+
                 if (!aCod.contains(cCod) && nPre >= 0) {
-                    String s = String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"", cCod, cRuolo, cNome, cSQ, cFM, cPre, cEvidenza);
-                    if (cRuolo.equalsIgnoreCase("P")) {
+                    String s = String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"", cCod, ruolo, nome, cSQ, cFM, cPre, infortunato, rigorista, cEvidenza);
+                    if (ruolo.equalsIgnoreCase("P")) {
                         aP.add(s);
-                    } else if (cRuolo.equalsIgnoreCase("D")) {
+                    } else if (ruolo.equalsIgnoreCase("D")) {
                         aD.add(s);
-                    } else if (cRuolo.equalsIgnoreCase("C")) {
+                    } else if (ruolo.equalsIgnoreCase("C")) {
                         aC.add(s);
-                    } else if (cRuolo.equalsIgnoreCase("A")) {
+                    } else if (ruolo.equalsIgnoreCase("A")) {
                         aA.add(s);
                     }
                 }
@@ -359,7 +382,10 @@ public class FantaSoccerAsta {
         return hrefLegaPrivata;
     }
 
-    private void goGeneraSvincolati(final ArrayList<String> aP, final ArrayList<String> aD, final ArrayList<String> aC, final ArrayList<String> aA) {
+    private void goGeneraSvincolati(final List<String> aP,
+            final List<String> aD,
+            final List<String> aC,
+            final List<String> aA) {
         StringBuilder svincolati = new StringBuilder();
         svincolati.append("Elenco giocatori svincolati per ruolo\r\n").append("\r\n").append("Portieri\r\n");
         aP.forEach((s) -> {
@@ -384,6 +410,57 @@ public class FantaSoccerAsta {
         log.info("Scrivo svincolati");
         scriviFile(svincolati.toString().getBytes(), "FantaSoccer-svincolati.csv");
 
+    }
+
+    private List<String> goGetInjured() throws UnirestException {
+        List<String> ret = new ArrayList<>();
+
+        log.info("Prendo la pagina degli infortunat");
+        String infortunatiPage = getPage(SITEHOME + "/it/seriea/infortunati/");
+
+        // Salvo l'infortunato
+        Document doc = Jsoup.parse(infortunatiPage);
+        Elements infoFantacalciatore = doc.getElementsByTag("span");
+        for (Element e : infoFantacalciatore) {
+            if (e.id().startsWith("MainContent_wuc_Infortunati1_rptSquadre_lblInfortunati_")) {
+                Elements linkFantacalciatore = e.getElementsByTag("a");
+                for (Element calc : linkFantacalciatore) {
+                    String cCod = calc.attr("href");
+                    int n3 = cCod.indexOf("/it/seriea/");
+                    int n4 = cCod.indexOf("/", n3 + 12);
+                    cCod = cCod.substring(n3 + 11, n4);
+                    ret.add(cCod);
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private List<String> getRigoristi() throws UnirestException {
+        List<String> ret = new ArrayList<>();
+
+        log.info("Prendo la pagina dei rigoristi");
+        String rigoristiPage = getPage(SITEHOME + "/it/rubriche/573/i-rigoristi-della-serie-a-chi-scegliere-per-il-fantacalcio/");
+
+        // Salvo l'infortunato
+        Document doc = Jsoup.parse(rigoristiPage);
+        Elements infoFantacalciatore = doc.getElementsByTag("strong");
+        for (Element e : infoFantacalciatore) {
+            String strong = e.text();
+            if (strong.contains(":")) {
+                strong = strong.substring(strong.indexOf(':') + 1);
+            }
+            strong = strong.replace("\\.", "")
+                    .trim();
+            if (strong.length() > 0) {
+                ret.add(strong);
+            }
+        }
+
+        ret.add("");
+
+        return ret;
     }
 
 }

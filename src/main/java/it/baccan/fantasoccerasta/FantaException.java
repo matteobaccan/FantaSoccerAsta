@@ -17,5 +17,5 @@ public class FantaException extends Exception {
     public FantaException(final String error) {
         super(error);
     }
-    
+
 }
