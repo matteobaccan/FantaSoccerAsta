@@ -14,6 +14,10 @@ package it.baccan.fantasoccerasta;
  */
 public class FantaException extends Exception {
 
+    /**
+     *
+     * @param error
+     */
     public FantaException(final String error) {
         super(error);
     }
