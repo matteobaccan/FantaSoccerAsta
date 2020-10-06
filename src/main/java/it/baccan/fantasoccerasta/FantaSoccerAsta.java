@@ -33,6 +33,7 @@ import org.jsoup.select.Elements;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -257,111 +258,67 @@ public class FantaSoccerAsta {
             final List<String> aInj,
             final List<String> aRig) throws UnirestException {
         // Ora scarico la statistica 2011-2012 e ordino per i migliori dell'anno
-        ArrayList<String> aP = new ArrayList<>();
-        ArrayList<String> aD = new ArrayList<>();
-        ArrayList<String> aC = new ArrayList<>();
-        ArrayList<String> aA = new ArrayList<>();
+        ArrayList<String> portieri = new ArrayList<>();
+        ArrayList<String> difensori = new ArrayList<>();
+        ArrayList<String> centrocampisti = new ArrayList<>();
+        ArrayList<String> attaccanti = new ArrayList<>();
 
-        // Prendo la squadra
-        log.info("Prendo la pagina delle statistiche");
-        String statistichePage = getPage(SITEHOME + "/it/statistiche/");
+        // Prendo le statistiche
+        String calciatoriPage = getStatistiche(false);
+        List<Calciatore> corrente = generaCalciatori(calciatoriPage, aInj, aRig);
 
-        int nPosFS1 = statistichePage.indexOf("<select name=\"ctl00$MainContent$wuc_Default1$cmbGiornata\"");
-        String select = "<option selected=\"selected\" value=\"";
-        nPosFS1 = statistichePage.indexOf(select, nPosFS1);
-        int nPosFS2 = statistichePage.indexOf("\"", nPosFS1 + select.length());
-        String fs = statistichePage.substring(nPosFS1 + select.length(), nPosFS2);
+        String calciatoriPagePrevious = getStatistiche(true);
+        List<Calciatore> previous = generaCalciatori(calciatoriPagePrevious, new ArrayList(), new ArrayList());
 
-        nPosFS1 = statistichePage.indexOf("<select name=\"ctl00$MainContent$wuc_Default1$cmbStagione\"");
-        select = "<option selected=\"selected\" value=\"";
-        nPosFS1 = statistichePage.indexOf(select, nPosFS1);
-        nPosFS2 = statistichePage.indexOf("\"", nPosFS1 + select.length());
-        String stagione = statistichePage.substring(nPosFS1 + select.length(), nPosFS2);
+        corrente.forEach(calciatore -> {
+            if (!aCod.contains(calciatore.getCodice())) {
 
-        String paginastatistiche = SITEHOME + "/it/statistiche/A/" + stagione + "/Tutti/Fantamedia/Full/fs/" + fs + "/";
-        log.info("Prendo le ultime statitiche [{}]", paginastatistiche);
-        String calciatoriPage = getPage(paginastatistiche);
-
-        int tableStart = calciatoriPage.indexOf("<table class=\"table bg-default\" id=\"statistiche-calciatori\"");
-        calciatoriPage = calciatoriPage.substring(tableStart, calciatoriPage.indexOf("</table>", tableStart));
-
-        int nPos = 0;
-        while (true) {
-            int nGio1 = calciatoriPage.indexOf("<tr>", nPos);
-            int nGio2 = calciatoriPage.indexOf("</tr>", nGio1);
-            if (nGio1 == -1 || nGio2 == -1) {
-                break;
-            }
-            nPos = nGio2;
-
-            String trGiocatore = calciatoriPage.substring(nGio1, nGio2 + 5);
-            Document docGiocatore = Jsoup.parse("<html><body><table>" + trGiocatore + "</table></body></html>");
-            Elements td = docGiocatore.getElementsByTag("td");
-
-            if (td.size() > 0) {
-                String nome = td.get(1).text();
-                int n1 = nome.indexOf("(");
-                int n2 = nome.indexOf(")", n1);
-                String ruolo = nome.substring(n1 + 1, n2);
-                nome = nome.substring(0, n1).trim();
-
-                String cSQ = td.get(2).text();
-                String cFM = td.get(3).text();
-                String cPre = td.get(4).text();
-                String cEvidenza = "";
-
-                int nPre = 0;
-                double nFM;
-                try {
-                    nPre = Double.valueOf(cPre).intValue();
-                    nFM = Double.parseDouble(cFM.replace(",", "."));
-                    if (nPre > 14 && nFM > 6) {
-                        cEvidenza = "*";
+                AtomicReference<Calciatore> statistichePrecedenti = new AtomicReference<>();
+                previous.forEach(precedenteCalciatore -> {
+                    if (precedenteCalciatore.getCodice().equals(calciatore.getCodice())) {
+                        statistichePrecedenti.set(precedenteCalciatore);
                     }
-                    if (nPre > 17 && nFM > 6) {
-                        cEvidenza = "**";
-                    }
-                    if (nPre > 20 && nFM > 6) {
-                        cEvidenza = "***";
-                    }
-                } catch (NumberFormatException ex) {
-                    log.info("Errore", ex);
+                });
+
+                String s = String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
+                        calciatore.getCodice(),
+                        calciatore.getRuolo(),
+                        calciatore.getNome(),
+                        calciatore.getSquadra(),
+                        calciatore.getFantamedia(),
+                        calciatore.getPresenze());
+
+                if (statistichePrecedenti.get() != null) {
+                    s += String.format(";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
+                            statistichePrecedenti.get().getRuolo(),
+                            statistichePrecedenti.get().getNome(),
+                            statistichePrecedenti.get().getSquadra(),
+                            statistichePrecedenti.get().getFantamedia(),
+                            statistichePrecedenti.get().getPresenze()
+                    );
+                } else {
+                    s += ";\"\";\"\";\"\";\"\";\"\"";
                 }
 
-                String cCod = td.get(1).html();
-                int n3 = cCod.indexOf("/it/seriea/");
-                int n4 = cCod.indexOf("/", n3 + 12);
-                cCod = cCod.substring(n3 + 11, n4);
+                s += String.format(";\"%s\";\"%s\";\"%s\"",
+                        calciatore.getInfortunato(),
+                        calciatore.getRigorista(),
+                        calciatore.getEvidenzia());
 
-                String infortunato = "";
-                if (aInj.contains(cCod)) {
-                    infortunato = "INFORTUNATO";
-                }
-
-                String rigorista = "";
-                for (String rig : aRig) {
-                    if (rig.toUpperCase().contains(nome.toUpperCase())) {
-                        rigorista = "RIGORISTA";
-                    }
-                }
-
-                if (!aCod.contains(cCod) && nPre >= 0) {
-                    String s = String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"", cCod, ruolo, nome, cSQ, cFM, cPre, infortunato, rigorista, cEvidenza);
-                    if (ruolo.equalsIgnoreCase("P")) {
-                        aP.add(s);
-                    } else if (ruolo.equalsIgnoreCase("D")) {
-                        aD.add(s);
-                    } else if (ruolo.equalsIgnoreCase("C")) {
-                        aC.add(s);
-                    } else if (ruolo.equalsIgnoreCase("A")) {
-                        aA.add(s);
-                    }
+                if (calciatore.getRuolo().equalsIgnoreCase("P")) {
+                    portieri.add(s);
+                } else if (calciatore.getRuolo().equalsIgnoreCase("D")) {
+                    difensori.add(s);
+                } else if (calciatore.getRuolo().equalsIgnoreCase("C")) {
+                    centrocampisti.add(s);
+                } else if (calciatore.getRuolo().equalsIgnoreCase("A")) {
+                    attaccanti.add(s);
                 }
             }
-        }
+        });
 
         // Esporto i risultati
-        goGeneraSvincolati(aP, aD, aC, aA);
+        goGeneraSvincolati(portieri, difensori, centrocampisti, attaccanti);
     }
 
     private String doGetLegaPrivata() throws UnirestException {
@@ -463,4 +420,114 @@ public class FantaSoccerAsta {
         return ret;
     }
 
+    private String getStatistiche(final boolean previous) throws UnirestException {
+        log.info("Prendo la pagina delle statistiche");
+        String statistichePage = getPage(SITEHOME + "/it/statistiche/");
+
+        int nPosFS1 = statistichePage.indexOf("<select name=\"ctl00$MainContent$wuc_Default1$cmbGiornata\"");
+        String select = "<option selected=\"selected\" value=\"";
+        nPosFS1 = statistichePage.indexOf(select, nPosFS1);
+        int nPosFS2 = statistichePage.indexOf("\"", nPosFS1 + select.length());
+        String giornata = statistichePage.substring(nPosFS1 + select.length(), nPosFS2);
+        if (previous) {
+            giornata = "38";
+        }
+
+        nPosFS1 = statistichePage.indexOf("<select name=\"ctl00$MainContent$wuc_Default1$cmbStagione\"");
+        select = "<option selected=\"selected\" value=\"";
+        if (previous) {
+            select = "<option value=\"";
+        }
+        nPosFS1 = statistichePage.indexOf(select, nPosFS1);
+        nPosFS2 = statistichePage.indexOf("\"", nPosFS1 + select.length());
+        String stagione = statistichePage.substring(nPosFS1 + select.length(), nPosFS2);
+
+        String paginastatistiche = SITEHOME + "/it/statistiche/A/" + stagione + "/Tutti/Fantamedia/Full/fs/" + giornata + "/";
+        log.info("Prendo le statitiche [{}]", paginastatistiche);
+        return getPage(paginastatistiche);
+    }
+
+    private List<Calciatore> generaCalciatori(final String calciatori, final List<String> aInj, final List<String> aRig) {
+        List<Calciatore> ret = new ArrayList<>();
+
+        int tableStart = calciatori.indexOf("<table class=\"table bg-default\" id=\"statistiche-calciatori\"");
+        String calciatoriPage = calciatori.substring(tableStart, calciatori.indexOf("</table>", tableStart));
+
+        int nPos = 0;
+        while (true) {
+            int nGio1 = calciatoriPage.indexOf("<tr>", nPos);
+            int nGio2 = calciatoriPage.indexOf("</tr>", nGio1);
+            if (nGio1 == -1 || nGio2 == -1) {
+                break;
+            }
+            nPos = nGio2;
+
+            String trGiocatore = calciatoriPage.substring(nGio1, nGio2 + 5);
+            Document docGiocatore = Jsoup.parse("<html><body><table>" + trGiocatore + "</table></body></html>");
+            Elements td = docGiocatore.getElementsByTag("td");
+
+            if (td.size() > 0) {
+                String nome = td.get(1).text();
+                int n1 = nome.indexOf("(");
+                int n2 = nome.indexOf(")", n1);
+                String ruolo = nome.substring(n1 + 1, n2);
+                nome = nome.substring(0, n1).trim();
+
+                String squadra = td.get(2).text();
+                String fantamedia = td.get(3).text();
+                String presenze = td.get(4).text();
+                String evidenzia = "";
+
+                int nPre;
+                double nFM;
+                try {
+                    nPre = Double.valueOf(presenze).intValue();
+                    nFM = Double.parseDouble(fantamedia.replace(",", "."));
+                    if (nPre > 14 && nFM > 6) {
+                        evidenzia = "*";
+                    }
+                    if (nPre > 17 && nFM > 6) {
+                        evidenzia = "**";
+                    }
+                    if (nPre > 20 && nFM > 6) {
+                        evidenzia = "***";
+                    }
+                } catch (NumberFormatException ex) {
+                    log.info("Errore", ex);
+                }
+
+                String codice = td.get(1).html();
+                int n3 = codice.indexOf("/it/seriea/");
+                int n4 = codice.indexOf("/", n3 + 12);
+                codice = codice.substring(n3 + 11, n4);
+
+                String infortunato = "";
+                if (aInj.contains(codice)) {
+                    infortunato = "INFORTUNATO";
+                }
+
+                String rigorista = "";
+                for (String rig : aRig) {
+                    if (rig.toUpperCase().contains(nome.toUpperCase())) {
+                        rigorista = "RIGORISTA";
+                    }
+                }
+
+                Calciatore calciatore = new Calciatore();
+                calciatore.setCodice(codice);
+                calciatore.setRuolo(ruolo);
+                calciatore.setNome(nome);
+                calciatore.setSquadra(squadra);
+                calciatore.setFantamedia(fantamedia);
+                calciatore.setPresenze(presenze);
+                calciatore.setInfortunato(infortunato);
+                calciatore.setRigorista(rigorista);
+                calciatore.setEvidenzia(evidenzia);
+
+                ret.add(calciatore);
+
+            }
+        }
+        return ret;
+    }
 }
