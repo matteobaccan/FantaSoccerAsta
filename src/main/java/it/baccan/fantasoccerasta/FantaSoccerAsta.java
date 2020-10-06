@@ -18,7 +18,7 @@ import java.awt.GridLayout;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.config.RegistryBuilder;
-import org.apache.http.cookie.*;
+import org.apache.http.cookie.CookieSpecProvider;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -40,6 +40,9 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.cookie.CookieOrigin;
+import org.apache.http.cookie.MalformedCookieException;
 
 /**
  * @author Matteo Baccan
@@ -53,7 +56,7 @@ public class FantaSoccerAsta {
     static {
         // Inizializza Unirest
         // Cookie store
-        BasicCookieStore cookieStore = new org.apache.http.impl.client.BasicCookieStore();
+        BasicCookieStore cookieStore = new BasicCookieStore();
 
         CookieSpecProvider csf = (HttpContext context) -> new BrowserCompatSpec() {
             @Override
