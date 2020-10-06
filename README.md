@@ -16,13 +16,26 @@ Calcolo automatico liste Fanta.soccer
 ## Il problema
 Con alcuni amici giochiamo, ogni anno, a Fantacalcio.
 
-Durante l'asta di settembre normalmente ci scanniamo per i migliori giocatori.
+Ci sono due momenti importanti durante un campionato di fantacalcio:
 
-All'inizio di febbraio c'è poi l'asta di riparazione.
+* L'asta di inizio campionato
+* L'asta di riparazione
+
+Questi due momenti si svolgono normalmente a ottobre e febbraio.
 
 Uno degli aspetti che fa la differenza durante l'asta è il fatto di arrivare preparati: sapere chi comperare puo' fare la differenza fra concludere o meno il campionato.
 
 ## La soluzione
-Essendo fondamentalmente un pigro, ho scritto un software che entra sul sito dove prepariamo le formazioni del fantacalcio [https://www.fanta.soccer], prende i giocatori, li filtra in base a quelli disponibili e li ordina per media.
+Il sito che usiamo normalmente [https://www.fanta.soccer] fornisce una statistica in tempo reale del giocatori: presenze, fantamedia, gol fatti e così via.
 
-In questo modo arrivare preparati è molto semplice
+Mancavano però alcuni dati che poteva essere interessante avere durante l'asta
+
+* Informazioni su giocatori infortunati
+* Informazioni sui rigoristi
+* Statisiche comparate rispetto all'anno precedente
+* Eventuali cambi di squadra
+* Analisi dei soli giocatori svincolati e non di tutti i giocatori disponibili
+
+Per questo motivo ho scritto un programma in grado di colmare questa lacuna.
+
+In questo modo arrivare preparati sarà molto semplice
