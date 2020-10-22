@@ -23,7 +23,6 @@ import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.LaxRedirectStrategy;
-import org.apache.http.impl.cookie.BrowserCompatSpec;
 import org.apache.http.protocol.HttpContext;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -33,6 +32,7 @@ import org.jsoup.select.Elements;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -43,6 +43,7 @@ import javax.swing.SwingConstants;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.cookie.CookieOrigin;
 import org.apache.http.cookie.MalformedCookieException;
+import org.apache.http.impl.cookie.DefaultCookieSpec;
 
 /**
  * @author Matteo Baccan
@@ -58,7 +59,7 @@ public class FantaSoccerAsta {
         // Cookie store
         BasicCookieStore cookieStore = new BasicCookieStore();
 
-        CookieSpecProvider csf = (HttpContext context) -> new BrowserCompatSpec() {
+        CookieSpecProvider csf = (HttpContext context) -> new DefaultCookieSpec() {
             @Override
             public void validate(Cookie cookie, CookieOrigin origin)
                     throws MalformedCookieException {
@@ -103,13 +104,16 @@ public class FantaSoccerAsta {
             List<String> aCod = goGetPlayers();
 
             // Prendo i giocatori della lega
-            List<String> aIng = goGetInjured();
+            List<String> aInj = goGetInjured();
 
             // Prendo i giocatori della lega
             List<String> aRig = getRigoristi();
 
+            // Tutti i giocatori anche quelli senza voto
+            List<Calciatore> aAll = getAllGiocatori(aInj, aRig);
+
             // Genero il report
-            doGenerateReport(aCod, aIng, aRig);
+            doGenerateReport(aCod, aInj, aRig, aAll);
 
         } catch (Exception ex) {
             log.error("Errore di elaborazione", ex);
@@ -259,7 +263,8 @@ public class FantaSoccerAsta {
 
     private void doGenerateReport(final List<String> aCod,
             final List<String> aInj,
-            final List<String> aRig) throws UnirestException {
+            final List<String> aRig,
+            final List<Calciatore> aAll) throws UnirestException {
         // Ora scarico la statistica 2011-2012 e ordino per i migliori dell'anno
         ArrayList<String> portieri = new ArrayList<>();
         ArrayList<String> difensori = new ArrayList<>();
@@ -273,6 +278,10 @@ public class FantaSoccerAsta {
         String calciatoriPagePrevious = getStatistiche(true);
         List<Calciatore> previous = generaCalciatori(calciatoriPagePrevious, new ArrayList(), new ArrayList());
 
+        // Unisco l'array giocatori con quelli che non hanno giocato
+        mergeArray(aAll, corrente);
+
+        log.info("Divido giocatori");
         corrente.forEach(calciatore -> {
             if (!aCod.contains(calciatore.getCodice())) {
 
@@ -423,6 +432,62 @@ public class FantaSoccerAsta {
         return ret;
     }
 
+    private List<Calciatore> getAllGiocatori(final List<String> aInj, final List<String> aRig) throws UnirestException {
+        List<Calciatore> ret = new ArrayList<>();
+        log.info("Prendo la pagina delle statistiche");
+        String statistichePage = getPage(SITEHOME + "/it/statistiche/");
+
+        int nPosFS1 = statistichePage.indexOf("<select name=\"ctl00$MainContent$wuc_Default1$cmbGiornata\"");
+        String select = "<option selected=\"selected\" value=\"";
+        nPosFS1 = statistichePage.indexOf(select, nPosFS1);
+        int nPosFS2 = statistichePage.indexOf("\"", nPosFS1 + select.length());
+        String giornata = statistichePage.substring(nPosFS1 + select.length(), nPosFS2);
+
+        // https://www.fanta.soccer/ArchivioQuotazioni/QuotazioniExcel.aspx?lang=it&serie=A&stagione=2020-2021&giornata=4
+        String fantaGiocatori = getPage(SITEHOME + "/ArchivioQuotazioni/QuotazioniExcel.aspx?lang=it&serie=A&stagione=2020-2021&giornata=" + giornata);
+
+        Document docGiocatore = Jsoup.parse("<html><body>" + fantaGiocatori + "</body></html>");
+        Elements tr = docGiocatore.getElementsByTag("tr");
+
+        boolean skipFirst = true;
+        for (Element e : tr) {
+            Elements td = e.getElementsByTag("td");
+            if (td.size() == 7) {
+                if (skipFirst) {
+                    skipFirst = false;
+                } else {
+                    String codice = "" + (Long.parseLong(td.get(0).text()) - 1000000);
+                    String nome = td.get(1).text();// + " " + td.get(2).text();
+
+                    String infortunato = "";
+                    if (aInj.contains(codice)) {
+                        infortunato = "INFORTUNATO";
+                    }
+
+                    String rigorista = "";
+                    for (String rig : aRig) {
+                        if (rig.toUpperCase().contains(nome.toUpperCase())) {
+                            rigorista = "RIGORISTA";
+                        }
+                    }
+
+                    Calciatore calciatore = new Calciatore();
+                    calciatore.setCodice(codice);
+                    calciatore.setNome(nome);
+                    calciatore.setSquadra(td.get(3).text());
+                    calciatore.setRuolo(td.get(4).text());
+                    calciatore.setPresenze("0");
+                    calciatore.setFantamedia("0");
+                    calciatore.setInfortunato(infortunato);
+                    calciatore.setRigorista(rigorista);
+                    calciatore.setEvidenzia("");
+                    ret.add(calciatore);
+                }
+            }
+        }
+        return ret;
+    }
+
     private String getStatistiche(final boolean previous) throws UnirestException {
         log.info("Prendo la pagina delle statistiche");
         String statistichePage = getPage(SITEHOME + "/it/statistiche/");
@@ -434,6 +499,9 @@ public class FantaSoccerAsta {
         String giornata = statistichePage.substring(nPosFS1 + select.length(), nPosFS2);
         if (previous) {
             giornata = "38";
+        } else {
+            // Il sito fornisce le statistiche sulla giornata precedente, quindi meglio prendere quelle della giornata successiva
+            giornata = "" + (Long.parseLong(giornata) + 1);
         }
 
         nPosFS1 = statistichePage.indexOf("<select name=\"ctl00$MainContent$wuc_Default1$cmbStagione\"");
@@ -533,4 +601,22 @@ public class FantaSoccerAsta {
         }
         return ret;
     }
+
+    private void mergeArray(final List<Calciatore> aAll, final List<Calciatore> corrente) {
+        log.info("Aggiungo calciatori non presenti");
+
+        aAll.forEach(calciatore -> {
+            AtomicBoolean found = new AtomicBoolean(false);
+            corrente.forEach(calciatoreConPrezenze -> {
+                if (calciatore.getCodice().equals(calciatoreConPrezenze.getCodice())) {
+                    found.set(true);
+                }
+            });
+            if (!found.get()) {
+                corrente.add(calciatore);
+            }
+        });
+
+    }
+
 }

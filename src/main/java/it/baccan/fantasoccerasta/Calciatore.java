@@ -149,5 +149,5 @@ public class Calciatore {
     public void setEvidenzia(String evidenzia) {
         this.evidenzia = evidenzia;
     }
-    
+
 }
