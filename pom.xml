@@ -20,6 +20,7 @@
                 <version>3.8.1</version>
                 <configuration>
                     <showDeprecation>true</showDeprecation>
+                    <compilerArgument>-Xlint:unchecked</compilerArgument>
                 </configuration>
             </plugin>
             <plugin>

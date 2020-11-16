@@ -276,7 +276,7 @@ public class FantaSoccerAsta {
         List<Calciatore> corrente = generaCalciatori(calciatoriPage, aInj, aRig);
 
         String calciatoriPagePrevious = getStatistiche(true);
-        List<Calciatore> previous = generaCalciatori(calciatoriPagePrevious, new ArrayList(), new ArrayList());
+        List<Calciatore> previous = generaCalciatori(calciatoriPagePrevious, new ArrayList<>(), new ArrayList<>());
 
         // Unisco l'array giocatori con quelli che non hanno giocato
         mergeArray(aAll, corrente);
