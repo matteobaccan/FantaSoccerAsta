@@ -49,9 +49,9 @@ jobs:
       - name: Commit files
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
-          dir D:\a\fantasoccerasta\fantasoccerasta\target\
-          copy D:\a\fantasoccerasta\fantasoccerasta\target\fantasoccerasta.exe   D:\a\fantasoccerasta\fantasoccerasta\executable\windows
-          copy D:\a\fantasoccerasta\fantasoccerasta\target\fantasoccerasta-*.exe D:\a\fantasoccerasta\fantasoccerasta\executable\windows
+          dir D:\a\FantaSoccerAsta\FantaSoccerAsta\target\
+          copy D:\a\FantaSoccerAsta\FantaSoccerAsta\target\FantaSoccerAsta.exe   D:\a\FantaSoccerAsta\FantaSoccerAsta\executable\windows
+          #copy D:\a\FantaSoccerAsta\FantaSoccerAsta\target\FantaSoccerAsta-*.exe D:\a\FantaSoccerAsta\FantaSoccerAsta\executable\windows
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add *.exe
@@ -61,7 +61,7 @@ jobs:
       - name: Commit files
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          cp /home/runner/work/fantasoccerasta/fantasoccerasta/target/fantasoccerasta /home/runner/work/fantasoccerasta/fantasoccerasta/executable/linux/
+          cp /home/runner/work/FantaSoccerAsta/FantaSoccerAsta/target/FantaSoccerAsta /home/runner/work/FantaSoccerAsta/FantaSoccerAsta/executable/linux/
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
@@ -71,7 +71,7 @@ jobs:
       - name: Commit files
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
-          cp /Users/runner/work/fantasoccerasta/fantasoccerasta/target/fantasoccerasta /Users/runner/work/fantasoccerasta/fantasoccerasta/executable/mac/
+          cp /Users/runner/work/FantaSoccerAsta/FantaSoccerAsta/target/FantaSoccerAsta /Users/runner/work/FantaSoccerAsta/FantaSoccerAsta/executable/mac/
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
