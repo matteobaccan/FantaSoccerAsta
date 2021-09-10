@@ -66,6 +66,27 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.graalvm.nativeimage</groupId>
+                <artifactId>native-image-maven-plugin</artifactId>
+                <version>${graalvm.version}</version>
+                <executions>
+                    <execution>
+                        <id>native-build</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>native-image</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>it.baccan.fantasoccerasta.FantaSoccerAsta</mainClass>
+                            <buildArgs>--no-fallback --allow-incomplete-classpath --enable-https</buildArgs>
+                            <imageName>FantaSoccerAsta</imageName>
+                            <skip>${skipNativeVersion}</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
