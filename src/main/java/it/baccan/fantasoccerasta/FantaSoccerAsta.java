@@ -31,6 +31,7 @@ import org.jsoup.select.Elements;
 
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -115,6 +116,7 @@ public class FantaSoccerAsta {
             // Genero il report
             doGenerateReport(aCod, aInj, aRig, aAll);
 
+            log.info("Statistiche generate: vai e vinci per me");
         } catch (Exception ex) {
             log.error("Errore di elaborazione", ex);
         }
@@ -146,9 +148,9 @@ public class FantaSoccerAsta {
     }
 
     private void scriviFile(byte[] buffer, String cFile) {
-        try ( RandomAccessFile RAF = new RandomAccessFile(cFile, "rw")) {
-            RAF.write(buffer, 0, buffer.length);
-            RAF.setLength(buffer.length);
+        try (RandomAccessFile randomAccessFile = new RandomAccessFile(cFile, "rw")) {
+            randomAccessFile.write(buffer, 0, buffer.length);
+            randomAccessFile.setLength(buffer.length);
         } catch (Exception ex) {
             log.error("Errore di scrittura file", ex);
         }
@@ -169,11 +171,11 @@ public class FantaSoccerAsta {
         // Prendo __VIEWSTATEGENERATOR e __VIEWSTATE
         Document loginDoc = Jsoup.parse(login);
 
-        Element __VIEWSTATEGENERATOR = loginDoc.getElementsByAttributeValue("name", "__VIEWSTATEGENERATOR").first();
-        String cE = __VIEWSTATEGENERATOR.attr("value");
+        Element viewStateGenerator = loginDoc.getElementsByAttributeValue("name", "__VIEWSTATEGENERATOR").first();
+        String cE = viewStateGenerator.attr("value");
 
-        Element __VIEWSTATE = loginDoc.getElementsByAttributeValue("name", "__VIEWSTATE").first();
-        String cV = __VIEWSTATE.attr("value");
+        Element viewState = loginDoc.getElementsByAttributeValue("name", "__VIEWSTATE").first();
+        String cV = viewState.attr("value");
 
         log.info("Homepage");
         // Faccio la post di login
@@ -357,24 +359,16 @@ public class FantaSoccerAsta {
             final List<String> aA) {
         StringBuilder svincolati = new StringBuilder();
         svincolati.append("Elenco giocatori svincolati per ruolo\r\n").append("\r\n").append("Portieri\r\n");
-        aP.forEach((s) -> {
-            svincolati.append(s).append("\r\n");
-        });
+        aP.forEach(s -> svincolati.append(s).append("\r\n"));
 
         svincolati.append("\r\n").append("Difensori\r\n");
-        aD.forEach((s) -> {
-            svincolati.append(s).append("\r\n");
-        });
+        aD.forEach(s -> svincolati.append(s).append("\r\n"));
 
         svincolati.append("\r\n").append("Centrocapisti\r\n");
-        aC.forEach((s) -> {
-            svincolati.append(s).append("\r\n");
-        });
+        aC.forEach(s -> svincolati.append(s).append("\r\n"));
 
         svincolati.append("\r\n").append("Attaccanti\r\n");
-        aA.forEach((s) -> {
-            svincolati.append(s).append("\r\n");
-        });
+        aA.forEach(s -> svincolati.append(s).append("\r\n"));
 
         log.info("Scrivo svincolati");
         scriviFile(svincolati.toString().getBytes(), "FantaSoccer-svincolati.csv");
@@ -410,24 +404,20 @@ public class FantaSoccerAsta {
         List<String> ret = new ArrayList<>();
 
         log.info("Prendo la pagina dei rigoristi");
-        String rigoristiPage = getPage(SITEHOME + "/it/rubriche/573/i-rigoristi-della-serie-a-chi-scegliere-per-il-fantacalcio/");
+        String rigoristiPage = getPage("https://www.goal.com/it/notizie/fantacalcio-rigoristi-serie-a-20212022/1w4l88p2pqxvf1u09xou0nopa0");
 
         // Salvo l'infortunato
         Document doc = Jsoup.parse(rigoristiPage);
-        Elements infoFantacalciatore = doc.getElementsByTag("strong");
+        Elements infoFantacalciatore = doc.getElementsByTag("li");
         for (Element e : infoFantacalciatore) {
             String strong = e.text();
             if (strong.contains(":")) {
                 strong = strong.substring(strong.indexOf(':') + 1);
-            }
-            strong = strong.replace("\\.", "")
-                    .trim();
-            if (strong.length() > 0) {
-                ret.add(strong);
+                Arrays.asList(strong.split(",")).forEach(
+                        rigorista -> ret.add(rigorista.trim())
+                );
             }
         }
-
-        ret.add("");
 
         return ret;
     }
@@ -457,7 +447,7 @@ public class FantaSoccerAsta {
                     skipFirst = false;
                 } else {
                     String codice = "" + (Long.parseLong(td.get(0).text()) - 1000000);
-                    String nome = td.get(1).text();// + " " + td.get(2).text();
+                    String nome = td.get(1).text();
 
                     String infortunato = "";
                     if (aInj.contains(codice)) {
