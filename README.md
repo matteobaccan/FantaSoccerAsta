@@ -8,8 +8,10 @@
 [![stability status](https://www.meterian.io/badge/gh/matteobaccan/FantaSoccerAsta/stability)](https://www.meterian.io/report/gh/matteobaccan/FantaSoccerAsta)
 [![DepShield Badge](https://depshield.sonatype.org/badges/matteobaccan/FantaSoccerAsta/depshield.svg)](https://depshield.github.io)
 
-![Java CI with Maven](https://github.com/matteobaccan/FantaSoccerAsta/workflows/Java%20CI%20with%20Maven/badge.svg)
-![Meterian vulnerability scan workflow](https://github.com/matteobaccan/FantaSoccerAsta/workflows/Meterian%20vulnerability%20scan%20workflow/badge.svg)
+[![CodeQL](https://github.com/matteobaccan/FantaSoccerAsta/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/matteobaccan/FantaSoccerAsta/actions/workflows/codeql-analysis.yml)
+[![GraalVM Build](https://github.com/matteobaccan/FantaSoccerAsta/actions/workflows/graalvm.yml/badge.svg)](https://github.com/matteobaccan/FantaSoccerAsta/actions/workflows/graalvm.yml)
+[![Java CI with Maven](https://github.com/matteobaccan/FantaSoccerAsta/actions/workflows/maven.yml/badge.svg)](https://github.com/matteobaccan/FantaSoccerAsta/actions/workflows/maven.yml)
+[![Meterian vulnerability scan workflow](https://github.com/matteobaccan/FantaSoccerAsta/actions/workflows/meterian.yml/badge.svg)](https://github.com/matteobaccan/FantaSoccerAsta/actions/workflows/meterian.yml)
 
 Calcolo automatico liste Fanta.soccer
 
