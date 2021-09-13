@@ -63,7 +63,7 @@ jobs:
       - name: Create release date
         if: ${{ matrix.os == 'windows-latest' }}
         id: read_release_win
-        shell: bash.exe
+        shell: bash
         run: |
           r=$(date "+%Y%m%d-%H%M%S")
           echo "::set-output name=RELEASE_BODY::$r"
