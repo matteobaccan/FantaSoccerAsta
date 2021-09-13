@@ -12,7 +12,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest]
+        #os: [windows-latest, ubuntu-latest, macos-latest]
       max-parallel: 3
 
     if: github.ref == 'refs/heads/master'
@@ -48,18 +49,6 @@ jobs:
       - name: Call maven
         run: mvn --no-transfer-progress -B package --file pom.xml -DskipNativeVersion=false
 
-#      - name: Commit files
-#        if: ${{ matrix.os == 'windows-latest' }}
-#        run: |
-#          dir D:\a\FantaSoccerAsta\FantaSoccerAsta\target\
-#          copy D:\a\FantaSoccerAsta\FantaSoccerAsta\target\FantaSoccerAsta.exe   D:\a\FantaSoccerAsta\FantaSoccerAsta\executable\windows
-#          #copy D:\a\FantaSoccerAsta\FantaSoccerAsta\target\FantaSoccerAsta-*.exe D:\a\FantaSoccerAsta\FantaSoccerAsta\executable\windows
-#          git config --local user.email "action@github.com"
-#          git config --local user.name "GitHub Action"
-#          git add *.exe
-#          git commit -m "[Automated] Added Windows build files"
-#          git pull
-
       - name: Create release date
         if: ${{ matrix.os == 'windows-latest' }}
         id: read_release_win
@@ -68,33 +57,17 @@ jobs:
           r=$(date "+%Y%m%d-%H%M%S")
           echo "::set-output name=RELEASE_BODY::$r"
 
-#       shell: cmd
-#       run: |
-#         SET HOUR=%time:~0,2%
-#         SET dtStamp9=%date:~-4%%date:~4,2%%date:~7,2%_0%time:~1,1%%time:~3,2%%time:~6,2%
-#         SET dtStamp24=%date:~-4%%date:~4,2%%date:~7,2%_%time:~0,2%%time:~3,2%%time:~6,2%
-#         if "%HOUR:~0,1%" == " " (SET dtStamp=%dtStamp9%) else (SET dtStamp=%dtStamp24%)
-
       - name: Upload Windows Binaries to Release
         if: ${{ matrix.os == 'windows-latest' }}
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: release/windows/${{ steps.read_release_win.outputs.RELEASE_BODY }}
-          file: D:\a\FantaSoccerAsta\FantaSoccerAsta\target\FantaSoccerAsta.exe
+          file: D:\a\FantaSoccerAsta\FantaSoccerAsta\target\FantaSoccerAsta-0.0.4.exe
+          #file: D:\a\FantaSoccerAsta\FantaSoccerAsta\target\FantaSoccerAsta.exe
           asset_name: FantaSoccerAsta.exe
           body: |
             Rilascio Windows del ${{ steps.read_release_win.outputs.RELEASE_BODY }}
-
-#      - name: Commit files
-#        if: ${{ matrix.os == 'ubuntu-latest' }}
-#        run: |
-#          cp /home/runner/work/FantaSoccerAsta/FantaSoccerAsta/target/FantaSoccerAsta /home/runner/work/FantaSoccerAsta/FantaSoccerAsta/executable/linux/
-#          git config --local user.email "action@github.com"
-#          git config --local user.name "GitHub Action"
-#          git add .
-#          git commit -m "[Automated] Added Linux build files"
-#          git pull
 
       - name: Create release date
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -115,16 +88,6 @@ jobs:
           body: |
             Rilascio Linux del ${{ steps.read_release_linux.outputs.RELEASE_BODY }}
 
-#      - name: Commit files
-#        if: ${{ matrix.os == 'macos-latest' }}
-#        run: |
-#          cp /Users/runner/work/FantaSoccerAsta/FantaSoccerAsta/target/FantaSoccerAsta /Users/runner/work/FantaSoccerAsta/FantaSoccerAsta/executable/mac/
-#          git config --local user.email "action@github.com"
-#          git config --local user.name "GitHub Action"
-#          git add .
-#          git commit -m "[Automated] Added Mac build files"
-#          git pull
-
       - name: Create release date
         if: ${{ matrix.os == 'macos-latest' }}
         id: read_release_mac
@@ -144,8 +107,3 @@ jobs:
           body: |
             Rilascio MacOS del ${{ steps.read_release_mac.outputs.RELEASE_BODY }}
 
-#      - name: Push changes
-#        uses: ad-m/github-push-action@master
-#        with:
-#          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          branch: ${{ github.ref }}

@@ -32,6 +32,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -321,25 +322,40 @@ public class FantaSoccerAsta {
                     }
                 });
 
-                String s = String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
-                        calciatore.getCodice(),
-                        calciatore.getRuolo(),
-                        calciatore.getNome(),
-                        calciatore.getSquadra(),
-                        calciatore.getFantamedia(),
-                        calciatore.getPresenze());
-
+                String previusStat = ";\"\";\"\";\"\";\"\";\"\"";
+                String notable = "";
+                String rendimento = "";
                 if (statistichePrecedenti.get() != null) {
-                    s += String.format(";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
+                    previusStat = String.format(";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
                             statistichePrecedenti.get().getRuolo(),
                             statistichePrecedenti.get().getNome(),
                             statistichePrecedenti.get().getSquadra(),
                             statistichePrecedenti.get().getFantamedia(),
                             statistichePrecedenti.get().getPresenze()
                     );
-                } else {
-                    s += ";\"\";\"\";\"\";\"\";\"\"";
+                    if (Long.parseLong(statistichePrecedenti.get().getPresenze()) >= 30) {
+                        if (statistichePrecedenti.get().getSquadra().equalsIgnoreCase(calciatore.getSquadra())) {
+                            notable = "**";
+                        } else {
+                            notable = "*";
+                        }
+                    }
+                    if (Double.parseDouble(statistichePrecedenti.get().getFantamedia().replace(',', '.')) > Double.parseDouble(calciatore.getFantamedia().replace(',', '.'))) {
+                        rendimento = "\uD83E\uDC17"; // Down 15
+                    }
                 }
+
+                String s = String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
+                        calciatore.getCodice(),
+                        calciatore.getRuolo(),
+                        notable,
+                        rendimento,
+                        calciatore.getNome(),
+                        calciatore.getSquadra(),
+                        calciatore.getFantamedia(),
+                        calciatore.getPresenze());
+
+                s += previusStat;
 
                 s += String.format(";\"%s\";\"%s\";\"%s\"",
                         calciatore.getInfortunato(),
@@ -398,7 +414,7 @@ public class FantaSoccerAsta {
         aA.forEach(s -> svincolati.append(s).append("\r\n"));
 
         log.info("Scrivo svincolati");
-        scriviFile(svincolati.toString().getBytes(), "FantaSoccer-svincolati.csv");
+        scriviFile(svincolati.toString().getBytes(StandardCharsets.UTF_8), "FantaSoccer-svincolati.csv");
 
     }
 

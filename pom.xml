@@ -42,6 +42,7 @@
                     <compilerArgument>-Xlint:unchecked</compilerArgument>
                 </configuration>
             </plugin>
+
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
@@ -63,6 +64,47 @@
                         <goals>
                             <goal>single</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                <artifactId>launch4j-maven-plugin</artifactId>
+                <version>2.1.2</version>
+                <executions>
+                    <execution>
+                        <id>l4j-fantasoccerasta</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>launch4j</goal>
+                        </goals>
+                        <configuration>
+                            <headerType>gui</headerType>
+                            <outfile>target/FantaSoccerAsta-${project.version}.exe</outfile>
+                            <jar>target/FantaSoccerAsta-${project.version}-jar-with-dependencies.jar</jar>
+                            <errTitle>FantaSoccerAsta</errTitle>
+                            <classPath>
+                                <mainClass>it.baccan.fantasoccerasta.FantaSoccerAsta</mainClass>
+                                <addDependencies>false</addDependencies>
+                                <preCp>anything</preCp>
+                            </classPath>
+                            <jre>
+                                <minVersion>11</minVersion>
+                                <path>%JAVA_HOME%</path>
+                            </jre>
+                            <versionInfo>
+                                <fileVersion>${project.version}.0</fileVersion>
+                                <txtFileVersion>${project.version}</txtFileVersion>
+                                <fileDescription>FantaSoccerAsta ${project.version}</fileDescription>
+                                <copyright>Matteo Baccan</copyright>
+                                <productVersion>${project.version}.0</productVersion>
+                                <txtProductVersion>${project.version}</txtProductVersion>
+                                <productName>FantaSoccerAsta</productName>
+                                <internalName>FantaSoccerAsta</internalName>
+                                <originalFilename>FantaSoccerAsta-${project.version}.exe</originalFilename>
+                            </versionInfo>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
