@@ -46,7 +46,19 @@ jobs:
         if: ${{ matrix.os == 'windows-latest' }}
 
       - name: Call maven
-        run: mvn -B package --file pom.xml -DskipNativeVersion=false
+        run: mvn --no-transfer-progress -B package --file pom.xml -DskipNativeVersion=false
+
+#      - name: Commit files
+#        if: ${{ matrix.os == 'windows-latest' }}
+#        run: |
+#          dir D:\a\FantaSoccerAsta\FantaSoccerAsta\target\
+#          copy D:\a\FantaSoccerAsta\FantaSoccerAsta\target\FantaSoccerAsta.exe   D:\a\FantaSoccerAsta\FantaSoccerAsta\executable\windows
+#          #copy D:\a\FantaSoccerAsta\FantaSoccerAsta\target\FantaSoccerAsta-*.exe D:\a\FantaSoccerAsta\FantaSoccerAsta\executable\windows
+#          git config --local user.email "action@github.com"
+#          git config --local user.name "GitHub Action"
+#          git add *.exe
+#          git commit -m "[Automated] Added Windows build files"
+#          git pull
 
       - name: Commit files
         if: ${{ matrix.os == 'windows-latest' }}
@@ -60,28 +72,45 @@ jobs:
           git commit -m "[Automated] Added Windows build files"
           git pull
 
-      - name: Commit files
-        if: ${{ matrix.os == 'ubuntu-latest' }}
+      - name: Read release.md and use it as a body of new release
+        id: read_release
+        shell: bash
         run: |
-          cp /home/runner/work/FantaSoccerAsta/FantaSoccerAsta/target/FantaSoccerAsta /home/runner/work/FantaSoccerAsta/FantaSoccerAsta/executable/linux/
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add .
-          git commit -m "[Automated] Added Linux build files"
-          git pull
+          r=$(date "+%Y%m%d-%H%M%S")
+          echo "::set-output name=RELEASE_BODY::$r"
 
-      - name: Commit files
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: |
-          cp /Users/runner/work/FantaSoccerAsta/FantaSoccerAsta/target/FantaSoccerAsta /Users/runner/work/FantaSoccerAsta/FantaSoccerAsta/executable/mac/
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add .
-          git commit -m "[Automated] Added Mac build files"
-          git pull
-
-      - name: Push changes
-        uses: ad-m/github-push-action@master
+      - name: Upload Binaries to Release
+        uses: svenstaro/upload-release-action@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+          file: D:\a\FantaSoccerAsta\FantaSoccerAsta\target\FantaSoccerAsta.exe
+          asset_name: Eseguibile Windows
+          body: |
+            Rilascio del ${{ steps.read_release.outputs.RELEASE_BODY }}
+
+#      - name: Commit files
+#        if: ${{ matrix.os == 'ubuntu-latest' }}
+#        run: |
+#          cp /home/runner/work/FantaSoccerAsta/FantaSoccerAsta/target/FantaSoccerAsta /home/runner/work/FantaSoccerAsta/FantaSoccerAsta/executable/linux/
+#          git config --local user.email "action@github.com"
+#          git config --local user.name "GitHub Action"
+#          git add .
+#          git commit -m "[Automated] Added Linux build files"
+#          git pull
+
+#      - name: Commit files
+#        if: ${{ matrix.os == 'macos-latest' }}
+#        run: |
+#          cp /Users/runner/work/FantaSoccerAsta/FantaSoccerAsta/target/FantaSoccerAsta /Users/runner/work/FantaSoccerAsta/FantaSoccerAsta/executable/mac/
+#          git config --local user.email "action@github.com"
+#          git config --local user.name "GitHub Action"
+#          git add .
+#          git commit -m "[Automated] Added Mac build files"
+#          git pull
+
+#      - name: Push changes
+#        uses: ad-m/github-push-action@master
+#        with:
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          branch: ${{ github.ref }}
