@@ -9,7 +9,7 @@
     "allPublicClasses" : true
 },
 {
-"name" : "java.awt.Toolkit",^
+"name" : "java.awt.Toolkit",
 "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
