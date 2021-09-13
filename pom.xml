@@ -80,7 +80,7 @@
                         </goals>
                         <configuration>
                             <mainClass>it.baccan.fantasoccerasta.FantaSoccerAsta</mainClass>
-                            <buildArgs>--no-fallback --allow-incomplete-classpath --enable-https -H:ReflectionConfigurationFiles=../graal/reflection-config.json</buildArgs>
+                            <buildArgs>--no-fallback --allow-incomplete-classpath --enable-https --native-image-info -H:ReflectionConfigurationFiles=../graal/reflection-config.json</buildArgs>
                             <imageName>FantaSoccerAsta</imageName>
                             <skip>${skipNativeVersion}</skip>
                         </configuration>

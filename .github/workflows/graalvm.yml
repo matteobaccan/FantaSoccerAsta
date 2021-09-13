@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest]
       max-parallel: 3
 
     if: github.ref == 'refs/heads/master'
@@ -108,7 +108,7 @@ jobs:
           file: /home/runner/work/FantaSoccerAsta/FantaSoccerAsta/target/FantaSoccerAsta
           asset_name: FantaSoccerAsta
           body: |
-            Rilascio Linux del ${{ steps.read_release_linux.outputs.dtStamp }}
+            Rilascio Linux del ${{ steps.read_release_linux.outputs.RELEASE_BODY }}
 
 #      - name: Commit files
 #        if: ${{ matrix.os == 'macos-latest' }}
@@ -137,7 +137,7 @@ jobs:
           file: /Users/runner/work/FantaSoccerAsta/FantaSoccerAsta/target/FantaSoccerAsta
           asset_name: FantaSoccerAsta
           body: |
-            Rilascio MacOS del ${{ steps.read_release_mac.outputs.dtStamp }}
+            Rilascio MacOS del ${{ steps.read_release_mac.outputs.RELEASE_BODY }}
 
 #      - name: Push changes
 #        uses: ad-m/github-push-action@master
