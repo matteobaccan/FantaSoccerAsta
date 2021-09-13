@@ -62,7 +62,7 @@ jobs:
 
       - name: Create release date
         if: ${{ matrix.os == 'windows-latest' }}
-        id: read_release
+        id: read_release_win
         shell: cmd
         run: |
           SET HOUR=%time:~0,2%
@@ -79,7 +79,7 @@ jobs:
           file: D:\a\FantaSoccerAsta\FantaSoccerAsta\target\FantaSoccerAsta.exe
           asset_name: Eseguibile Windows
           body: |
-            Rilascio del ${{ steps.read_release.outputs.dtStamp }} - Windows
+            Rilascio del ${{ steps.read_release_win.outputs.dtStamp }} - Windows
 
 #      - name: Commit files
 #        if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -93,7 +93,7 @@ jobs:
 
       - name: Create release date
         if: ${{ matrix.os == 'ubuntu-latest' }}
-        id: read_release
+        id: read_release_linux
         shell: bash
         run: |
           r=$(date "+%Y%m%d-%H%M%S")
@@ -111,7 +111,7 @@ jobs:
 
       - name: Create release date
         if: ${{ matrix.os == 'macos-latest' }}
-        id: read_release
+        id: read_release_mac
         shell: bash
         run: |
           r=$(date "+%Y%m%d-%H%M%S")
