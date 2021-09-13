@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-      max-parallel: 1
+      max-parallel: 3
 
     if: github.ref == 'refs/heads/master'
     steps:
@@ -70,16 +70,16 @@ jobs:
           SET dtStamp24=%date:~-4%%date:~4,2%%date:~7,2%_%time:~0,2%%time:~3,2%%time:~6,2%
           if "%HOUR:~0,1%" == " " (SET dtStamp=%dtStamp9%) else (SET dtStamp=%dtStamp24%)
 
-      - name: Upload Binaries to Release
+      - name: Upload Windows Binaries to Release
         if: ${{ matrix.os == 'windows-latest' }}
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref }}
+          tag: release-windows-${{ steps.read_release_win.outputs.dtStamp }}
           file: D:\a\FantaSoccerAsta\FantaSoccerAsta\target\FantaSoccerAsta.exe
-          asset_name: Eseguibile Windows
+          asset_name: FantaSoccerAsta.exe
           body: |
-            Rilascio del ${{ steps.read_release_win.outputs.dtStamp }} - Windows
+            Rilascio Windows del ${{ steps.read_release_win.outputs.dtStamp }}
 
 #      - name: Commit files
 #        if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -99,6 +99,17 @@ jobs:
           r=$(date "+%Y%m%d-%H%M%S")
           echo "::set-output name=RELEASE_BODY::$r"
 
+      - name: Upload Linux Binaries to Release
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: release-linux-${{ steps.read_release_win.outputs.dtStamp }}
+          file: /home/runner/work/FantaSoccerAsta/FantaSoccerAsta/target/FantaSoccerAsta
+          asset_name: FantaSoccerAsta
+          body: |
+            Rilascio Linux del ${{ steps.read_release_linux.outputs.dtStamp }}
+
 #      - name: Commit files
 #        if: ${{ matrix.os == 'macos-latest' }}
 #        run: |
@@ -116,6 +127,17 @@ jobs:
         run: |
           r=$(date "+%Y%m%d-%H%M%S")
           echo "::set-output name=RELEASE_BODY::$r"
+
+      - name: Upload Mac Binaries to Release
+        if: ${{ matrix.os == 'macos-latest' }}
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: release-mac-${{ steps.read_release_win.outputs.dtStamp }}
+          file: /Users/runner/work/FantaSoccerAsta/FantaSoccerAsta/target/FantaSoccerAsta
+          asset_name: FantaSoccerAsta
+          body: |
+            Rilascio MacOS del ${{ steps.read_release_mac.outputs.dtStamp }}
 
 #      - name: Push changes
 #        uses: ad-m/github-push-action@master
