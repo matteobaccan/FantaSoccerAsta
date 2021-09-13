@@ -60,26 +60,18 @@ jobs:
 #          git commit -m "[Automated] Added Windows build files"
 #          git pull
 
-      - name: Commit files
+      - name: Create release date
         if: ${{ matrix.os == 'windows-latest' }}
-        run: |
-          dir D:\a\FantaSoccerAsta\FantaSoccerAsta\target\
-          copy D:\a\FantaSoccerAsta\FantaSoccerAsta\target\FantaSoccerAsta.exe   D:\a\FantaSoccerAsta\FantaSoccerAsta\executable\windows
-          #copy D:\a\FantaSoccerAsta\FantaSoccerAsta\target\FantaSoccerAsta-*.exe D:\a\FantaSoccerAsta\FantaSoccerAsta\executable\windows
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add *.exe
-          git commit -m "[Automated] Added Windows build files"
-          git pull
-
-      - name: Read release.md and use it as a body of new release
         id: read_release
-        shell: bash
+        shell: cmd
         run: |
-          r=$(date "+%Y%m%d-%H%M%S")
-          echo "::set-output name=RELEASE_BODY::$r"
+          SET HOUR=%time:~0,2%
+          SET dtStamp9=%date:~-4%%date:~4,2%%date:~7,2%_0%time:~1,1%%time:~3,2%%time:~6,2%
+          SET dtStamp24=%date:~-4%%date:~4,2%%date:~7,2%_%time:~0,2%%time:~3,2%%time:~6,2%
+          if "%HOUR:~0,1%" == " " (SET dtStamp=%dtStamp9%) else (SET dtStamp=%dtStamp24%)
 
       - name: Upload Binaries to Release
+        if: ${{ matrix.os == 'windows-latest' }}
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -87,7 +79,7 @@ jobs:
           file: D:\a\FantaSoccerAsta\FantaSoccerAsta\target\FantaSoccerAsta.exe
           asset_name: Eseguibile Windows
           body: |
-            Rilascio del ${{ steps.read_release.outputs.RELEASE_BODY }}
+            Rilascio del ${{ steps.read_release.outputs.dtStamp }} - Windows
 
 #      - name: Commit files
 #        if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -99,6 +91,14 @@ jobs:
 #          git commit -m "[Automated] Added Linux build files"
 #          git pull
 
+      - name: Create release date
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        id: read_release
+        shell: bash
+        run: |
+          r=$(date "+%Y%m%d-%H%M%S")
+          echo "::set-output name=RELEASE_BODY::$r"
+
 #      - name: Commit files
 #        if: ${{ matrix.os == 'macos-latest' }}
 #        run: |
@@ -108,6 +108,14 @@ jobs:
 #          git add .
 #          git commit -m "[Automated] Added Mac build files"
 #          git pull
+
+      - name: Create release date
+        if: ${{ matrix.os == 'macos-latest' }}
+        id: read_release
+        shell: bash
+        run: |
+          r=$(date "+%Y%m%d-%H%M%S")
+          echo "::set-output name=RELEASE_BODY::$r"
 
 #      - name: Push changes
 #        uses: ad-m/github-push-action@master
