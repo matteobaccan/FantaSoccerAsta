@@ -66,6 +66,8 @@ public class FantaSoccerAsta {
 
     private static final String SITEHOME = "https://www.fanta.soccer";
     private static final String USERAGENT = "Mozilla/5.0 (Windows NT 6.1; rv:52.0) Gecko/20100101 Firefox/52.0";
+    private static final String SERIE_A = "A";
+    private static final String SERIE_B = "B";
 
     static {
         // Inizializza Unirest
@@ -532,9 +534,6 @@ public class FantaSoccerAsta {
         return ret;
     }
 
-    private static final String SERIE_A = "A";
-    private static final String SERIE_B = "B";
-
     private String getStatistiche(final String serie, final boolean annoPrecedente, final boolean giornataPrecente) throws UnirestException {
         log.info("Prendo la pagina delle statistiche della giornata");
         String statistichePage = getPage(SITEHOME + "/it/statistiche/");
@@ -601,25 +600,7 @@ public class FantaSoccerAsta {
                 String squadra = td.get(2).text();
                 String fantamedia = td.get(3).text();
                 String presenze = td.get(4).text();
-                String evidenzia = "";
-
-                int nPre;
-                double nFM;
-                try {
-                    nPre = Double.valueOf(presenze).intValue();
-                    nFM = Double.parseDouble(fantamedia.replace(",", "."));
-                    if (nPre > 14 && nFM > 6) {
-                        evidenzia = "*";
-                    }
-                    if (nPre > 17 && nFM > 6) {
-                        evidenzia = "**";
-                    }
-                    if (nPre > 20 && nFM > 6) {
-                        evidenzia = "***";
-                    }
-                } catch (NumberFormatException ex) {
-                    log.info("Errore", ex);
-                }
+                String evidenzia = getEvidenzia(presenze, fantamedia);
 
                 String codice = td.get(1).html();
                 int n3 = codice.indexOf("/it/serie" + serie.toLowerCase() + "/");
@@ -671,6 +652,28 @@ public class FantaSoccerAsta {
             }
         });
 
+    }
+
+    private String getEvidenzia(String presenze, String fantamedia) {
+        String evidenzia = "";
+
+        try {
+            int nPre = Double.valueOf(presenze).intValue();
+            double nFM = Double.parseDouble(fantamedia.replace(",", "."));
+            if (nPre > 14 && nFM > 6) {
+                evidenzia = "*";
+            }
+            if (nPre > 17 && nFM > 6) {
+                evidenzia = "**";
+            }
+            if (nPre > 20 && nFM > 6) {
+                evidenzia = "***";
+            }
+        } catch (NumberFormatException ex) {
+            log.info("Errore", ex);
+        }
+
+        return evidenzia;
     }
 
 }
