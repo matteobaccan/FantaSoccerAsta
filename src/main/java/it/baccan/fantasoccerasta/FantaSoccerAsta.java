@@ -294,19 +294,23 @@ public class FantaSoccerAsta {
         List<String> attaccanti = new ArrayList<>();
 
         // Prendo le statistiche
-        String calciatoriPage = getStatistiche(false, false);
-        List<Calciatore> corrente = generaCalciatori(calciatoriPage, aInj, aRig);
+        String calciatoriPage = getStatistiche(SERIE_A, false, false);
+        List<Calciatore> corrente = generaCalciatori(SERIE_A, calciatoriPage, aInj, aRig);
         // Se non ho le statistiche aggiornate, prendo la giornata precedente
         if (corrente.isEmpty()) {
             log.info("Le statistiche della giornata corrente non sono pronte, prendo quelle della giornata precedente");
-            calciatoriPage = getStatistiche(false, true);
-            corrente.addAll(generaCalciatori(calciatoriPage, new ArrayList<>(), aRig));
+            calciatoriPage = getStatistiche(SERIE_A, false, true);
+            corrente.addAll(generaCalciatori(SERIE_A, calciatoriPage, new ArrayList<>(), aRig));
         }
         log.info("Trovate statistiche per [{}] giocatori della stagione corrente", corrente.size());
 
-        String calciatoriPagePrevious = getStatistiche(true, false);
-        List<Calciatore> previous = generaCalciatori(calciatoriPagePrevious, new ArrayList<>(), new HashMap<>());
-        log.info("Trovate statistiche per [{}]  giocatori della stagione precedente", corrente.size());
+        String calciatoriPagePrevious = getStatistiche(SERIE_A, true, false);
+        List<Calciatore> previous = generaCalciatori(SERIE_A, calciatoriPagePrevious, new ArrayList<>(), new HashMap<>());
+        log.info("Trovate statistiche per [{}]  giocatori della stagione precedente", previous.size());
+
+        String calciatoriPagePreviousB = getStatistiche(SERIE_B, true, false);
+        List<Calciatore> previousB = generaCalciatori(SERIE_B, calciatoriPagePreviousB, new ArrayList<>(), new HashMap<>());
+        log.info("Trovate statistiche per [{}]  giocatori della serie B stagione precedente", previousB.size());
 
         // Unisco l'array giocatori con quelli che non hanno giocato
         mergeArray(aAll, corrente);
@@ -321,17 +325,23 @@ public class FantaSoccerAsta {
                         statistichePrecedenti.set(precedenteCalciatore);
                     }
                 });
+                previousB.forEach(precedenteCalciatore -> {
+                    if (precedenteCalciatore.getCodice().equals(calciatore.getCodice())) {
+                        statistichePrecedenti.set(precedenteCalciatore);
+                    }
+                });
 
-                String previusStat = ";\"\";\"\";\"\";\"\";\"\"";
+                String previusStat = ";\"\";\"\";\"\";\"\";\"\";\"\"";
                 String notable = "";
                 String rendimento = "";
                 if (statistichePrecedenti.get() != null) {
-                    previusStat = String.format(";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
+                    previusStat = String.format(";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
                             statistichePrecedenti.get().getRuolo(),
                             statistichePrecedenti.get().getNome(),
                             statistichePrecedenti.get().getSquadra(),
                             statistichePrecedenti.get().getFantamedia(),
-                            statistichePrecedenti.get().getPresenze()
+                            statistichePrecedenti.get().getPresenze(),
+                            statistichePrecedenti.get().getSerie()
                     );
                     if (Long.parseLong(statistichePrecedenti.get().getPresenze()) >= 30) {
                         if (statistichePrecedenti.get().getSquadra().equalsIgnoreCase(calciatore.getSquadra())) {
@@ -345,8 +355,7 @@ public class FantaSoccerAsta {
                     }
                 }
 
-                String s = String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
-                        calciatore.getCodice(),
+                String s = String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
                         calciatore.getRuolo(),
                         notable,
                         rendimento,
@@ -407,7 +416,7 @@ public class FantaSoccerAsta {
         svincolati.append("\r\n").append("Difensori\r\n");
         aD.forEach(s -> svincolati.append(s).append("\r\n"));
 
-        svincolati.append("\r\n").append("Centrocapisti\r\n");
+        svincolati.append("\r\n").append("Centrocampisti\r\n");
         aC.forEach(s -> svincolati.append(s).append("\r\n"));
 
         svincolati.append("\r\n").append("Attaccanti\r\n");
@@ -493,13 +502,13 @@ public class FantaSoccerAsta {
 
                     String infortunato = "";
                     if (aInj.contains(codice)) {
-                        infortunato = "INFORTUNATO";
+                        infortunato = "INF";
                     }
 
                     String rigorista = "";
                     String key = squadra.toUpperCase() + ":" + nome.toUpperCase();
                     if (aRig.containsKey(key)) {
-                        rigorista = "RIGORISTA:" + aRig.get(key);
+                        rigorista = "R:" + aRig.get(key);
                     }
 
                     Calciatore calciatore = new Calciatore();
@@ -523,7 +532,10 @@ public class FantaSoccerAsta {
         return ret;
     }
 
-    private String getStatistiche(final boolean annoPrecedente, final boolean giornataPrecente) throws UnirestException {
+    private static final String SERIE_A = "A";
+    private static final String SERIE_B = "B";
+
+    private String getStatistiche(final String serie, final boolean annoPrecedente, final boolean giornataPrecente) throws UnirestException {
         log.info("Prendo la pagina delle statistiche della giornata");
         String statistichePage = getPage(SITEHOME + "/it/statistiche/");
 
@@ -545,7 +557,7 @@ public class FantaSoccerAsta {
 
         String stagione = getStagione(statistichePage, annoPrecedente);
 
-        String paginastatistiche = SITEHOME + "/it/statistiche/A/" + stagione + "/Tutti/Fantamedia/Full/fs/" + giornata + "/";
+        String paginastatistiche = SITEHOME + "/it/statistiche/" + serie + "/" + stagione + "/Tutti/Fantamedia/Full/fs/" + giornata + "/";
         return getPage(paginastatistiche);
     }
 
@@ -560,7 +572,7 @@ public class FantaSoccerAsta {
         return statistichePage.substring(nPosFS1 + select.length(), nPosFS2);
     }
 
-    private List<Calciatore> generaCalciatori(final String calciatori, final List<String> aInj, final Map<String, String> aRig) {
+    private List<Calciatore> generaCalciatori(final String serie, final String calciatori, final List<String> aInj, final Map<String, String> aRig) {
         List<Calciatore> ret = new ArrayList<>();
 
         int tableStart = calciatori.indexOf("<table class=\"table bg-default\" id=\"statistiche-calciatori\"");
@@ -610,19 +622,19 @@ public class FantaSoccerAsta {
                 }
 
                 String codice = td.get(1).html();
-                int n3 = codice.indexOf("/it/seriea/");
+                int n3 = codice.indexOf("/it/serie" + serie.toLowerCase() + "/");
                 int n4 = codice.indexOf("/", n3 + 12);
                 codice = codice.substring(n3 + 11, n4);
 
                 String infortunato = "";
                 if (aInj.contains(codice)) {
-                    infortunato = "INFORTUNATO";
+                    infortunato = "INF";
                 }
 
                 String rigorista = "";
                 String key = squadra.toUpperCase() + ":" + nome.toUpperCase();
                 if (aRig.containsKey(key)) {
-                    rigorista = "RIGORISTA - " + aRig.get(key);
+                    rigorista = "R:" + aRig.get(key);
                 }
 
                 Calciatore calciatore = new Calciatore();
@@ -635,6 +647,7 @@ public class FantaSoccerAsta {
                 calciatore.setInfortunato(infortunato);
                 calciatore.setRigorista(rigorista);
                 calciatore.setEvidenzia(evidenzia);
+                calciatore.setSerie(serie);
 
                 ret.add(calciatore);
 

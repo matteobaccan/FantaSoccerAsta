@@ -23,6 +23,7 @@ public class Calciatore {
     private String infortunato;
     private String rigorista;
     private String evidenzia;
+    private String serie;
 
     /**
      * @return the codice
@@ -150,4 +151,17 @@ public class Calciatore {
         this.evidenzia = evidenzia;
     }
 
+    /**
+     * @return the serie
+     */
+    public String getSerie() {
+        return serie;
+    }
+
+    /**
+     * @param serie the serie to set
+     */
+    public void setSerie(String serie) {
+        this.serie = serie;
+    }
 }

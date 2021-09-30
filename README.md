@@ -34,7 +34,7 @@ Mancavano però alcuni dati che poteva essere interessante avere durante l'asta
 
 * Informazioni su giocatori infortunati
 * Informazioni sui rigoristi
-* Statisiche comparate rispetto all'anno precedente
+* Statisiche comparate rispetto all'anno precedente, anche se il giocatore giocava in serie B
 * Eventuali cambi di squadra
 * Analisi dei soli giocatori svincolati e non di tutti i giocatori disponibili
 
