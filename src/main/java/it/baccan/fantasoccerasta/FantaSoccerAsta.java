@@ -290,29 +290,16 @@ public class FantaSoccerAsta {
             final Map<String, String> aRig,
             final List<Calciatore> aAll) throws UnirestException {
         // Ora scarico la statistica e ordino per i migliori dell'anno
-        List<String> portieri = new ArrayList<>();
-        List<String> difensori = new ArrayList<>();
-        List<String> centrocampisti = new ArrayList<>();
-        List<String> attaccanti = new ArrayList<>();
+        Map<String, List<String>> giocatori = new HashMap<>();
+        giocatori.put("P", new ArrayList<>());
+        giocatori.put("D", new ArrayList<>());
+        giocatori.put("C", new ArrayList<>());
+        giocatori.put("A", new ArrayList<>());
 
         // Prendo le statistiche
-        String calciatoriPage = getStatistiche(SERIE_A, false, false);
-        List<Calciatore> corrente = generaCalciatori(SERIE_A, calciatoriPage, aInj, aRig);
-        // Se non ho le statistiche aggiornate, prendo la giornata precedente
-        if (corrente.isEmpty()) {
-            log.info("Le statistiche della giornata corrente non sono pronte, prendo quelle della giornata precedente");
-            calciatoriPage = getStatistiche(SERIE_A, false, true);
-            corrente.addAll(generaCalciatori(SERIE_A, calciatoriPage, new ArrayList<>(), aRig));
-        }
-        log.info("Trovate statistiche per [{}] giocatori della stagione corrente", corrente.size());
-
-        String calciatoriPagePrevious = getStatistiche(SERIE_A, true, false);
-        List<Calciatore> previous = generaCalciatori(SERIE_A, calciatoriPagePrevious, new ArrayList<>(), new HashMap<>());
-        log.info("Trovate statistiche per [{}]  giocatori della stagione precedente", previous.size());
-
-        String calciatoriPagePreviousB = getStatistiche(SERIE_B, true, false);
-        List<Calciatore> previousB = generaCalciatori(SERIE_B, calciatoriPagePreviousB, new ArrayList<>(), new HashMap<>());
-        log.info("Trovate statistiche per [{}]  giocatori della serie B stagione precedente", previousB.size());
+        List<Calciatore> corrente = getStatisticaCorrente(aInj, aRig);
+        List<Calciatore> previous = getStatisticaPrecedente(SERIE_A);
+        previous.addAll(getStatisticaPrecedente(SERIE_B));
 
         // Unisco l'array giocatori con quelli che non hanno giocato
         mergeArray(aAll, corrente);
@@ -327,66 +314,79 @@ public class FantaSoccerAsta {
                         statistichePrecedenti.set(precedenteCalciatore);
                     }
                 });
-                previousB.forEach(precedenteCalciatore -> {
-                    if (precedenteCalciatore.getCodice().equals(calciatore.getCodice())) {
-                        statistichePrecedenti.set(precedenteCalciatore);
-                    }
-                });
 
-                String previusStat = ";\"\";\"\";\"\";\"\";\"\";\"\"";
-                String notable = "";
-                String rendimento = "";
-                if (statistichePrecedenti.get() != null) {
-                    previusStat = String.format(";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
-                            statistichePrecedenti.get().getRuolo(),
-                            statistichePrecedenti.get().getNome(),
-                            statistichePrecedenti.get().getSquadra(),
-                            statistichePrecedenti.get().getFantamedia(),
-                            statistichePrecedenti.get().getPresenze(),
-                            statistichePrecedenti.get().getSerie()
-                    );
-                    if (Long.parseLong(statistichePrecedenti.get().getPresenze()) >= 30) {
-                        if (statistichePrecedenti.get().getSquadra().equalsIgnoreCase(calciatore.getSquadra())) {
-                            notable = "**";
-                        } else {
-                            notable = "*";
-                        }
-                    }
-                    if (Double.parseDouble(statistichePrecedenti.get().getFantamedia().replace(',', '.')) > Double.parseDouble(calciatore.getFantamedia().replace(',', '.'))) {
-                        rendimento = "\uD83E\uDC17"; // Down 15
-                    }
-                }
-
-                String s = String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
+                String s = String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
                         calciatore.getRuolo(),
-                        notable,
-                        rendimento,
                         calciatore.getNome(),
                         calciatore.getSquadra(),
                         calciatore.getFantamedia(),
                         calciatore.getPresenze());
 
-                s += previusStat;
+                s += getRendimentoPrecedente(statistichePrecedenti.get(), calciatore);
 
                 s += String.format(";\"%s\";\"%s\";\"%s\"",
                         calciatore.getInfortunato(),
                         calciatore.getRigorista(),
                         calciatore.getEvidenzia());
 
-                if (calciatore.getRuolo().equalsIgnoreCase("P")) {
-                    portieri.add(s);
-                } else if (calciatore.getRuolo().equalsIgnoreCase("D")) {
-                    difensori.add(s);
-                } else if (calciatore.getRuolo().equalsIgnoreCase("C")) {
-                    centrocampisti.add(s);
-                } else if (calciatore.getRuolo().equalsIgnoreCase("A")) {
-                    attaccanti.add(s);
-                }
+                giocatori.get(calciatore.getRuolo().toUpperCase()).add(s);
             }
         });
 
         // Esporto i risultati
-        goGeneraSvincolati(portieri, difensori, centrocampisti, attaccanti);
+        goGeneraSvincolati(giocatori.get("P"), giocatori.get("D"), giocatori.get("C"), giocatori.get("A"));
+    }
+
+    private List<Calciatore> getStatisticaCorrente(List<String> aInj, Map<String, String> aRig) throws UnirestException {
+        String calciatoriPage = getStatistiche(SERIE_A, false, false);
+        List<Calciatore> corrente = generaCalciatori(SERIE_A, calciatoriPage, aInj, aRig);
+        // Se non ho le statistiche aggiornate, prendo la giornata precedente
+        if (corrente.isEmpty()) {
+            log.info("Le statistiche della giornata corrente non sono pronte, prendo quelle della giornata precedente");
+            calciatoriPage = getStatistiche(SERIE_A, false, true);
+            corrente.addAll(generaCalciatori(SERIE_A, calciatoriPage, new ArrayList<>(), aRig));
+        }
+        log.info("Trovate statistiche per [{}] giocatori della stagione corrente", corrente.size());
+        return corrente;
+    }
+
+    private List<Calciatore> getStatisticaPrecedente(String serie) throws UnirestException {
+        String calciatoriPagePrevious = getStatistiche(serie, true, false);
+        List<Calciatore> previous = generaCalciatori(serie, calciatoriPagePrevious, new ArrayList<>(), new HashMap<>());
+        log.info("Trovate statistiche per [{}] giocatori die serie [{}] della stagione precedente", previous.size(), serie);
+        return previous;
+    }
+
+    private String getRendimentoPrecedente(Calciatore statistichePrecedenti, Calciatore calciatore) {
+        String previusStat = ";\"\";\"\";\"\";\"\";\"\";\"\";\"\";\"\"";
+        if (statistichePrecedenti != null) {
+            String notable = "";
+            String rendimento = "";
+
+            if (Long.parseLong(statistichePrecedenti.getPresenze()) >= 30) {
+                if (statistichePrecedenti.getSquadra().equalsIgnoreCase(calciatore.getSquadra())) {
+                    notable = "**";
+                } else {
+                    notable = "*";
+                }
+            }
+
+            if (Double.parseDouble(statistichePrecedenti.getFantamedia().replace(',', '.')) > Double.parseDouble(calciatore.getFantamedia().replace(',', '.'))) {
+                rendimento = "\uD83E\uDC17"; // Down 15
+            }
+
+            previusStat = String.format(";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
+                    notable,
+                    rendimento,
+                    statistichePrecedenti.getRuolo(),
+                    statistichePrecedenti.getNome(),
+                    statistichePrecedenti.getSquadra(),
+                    statistichePrecedenti.getFantamedia(),
+                    statistichePrecedenti.getPresenze(),
+                    statistichePrecedenti.getSerie()
+            );
+        }
+        return previusStat;
     }
 
     private String doGetLegaPrivata() throws UnirestException {
@@ -638,8 +638,6 @@ public class FantaSoccerAsta {
     }
 
     private void mergeArray(final List<Calciatore> aAll, final List<Calciatore> corrente) {
-        log.info("Aggiungo alla lista dei giocatori con statistiche, i giocatori senza statistiche");
-
         aAll.forEach(calciatore -> {
             AtomicBoolean found = new AtomicBoolean(false);
             corrente.forEach(calciatoreConPrezenze -> {
@@ -651,7 +649,6 @@ public class FantaSoccerAsta {
                 corrente.add(calciatore);
             }
         });
-
     }
 
     private String getEvidenzia(String presenze, String fantamedia) {
