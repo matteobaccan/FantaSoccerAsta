@@ -20,23 +20,23 @@ Con alcuni amici giochiamo, ogni anno, a Fantacalcio.
 
 Ci sono due momenti importanti durante un campionato di fantacalcio:
 
-* L'asta di inizio campionato
-* L'asta di riparazione
+ - L'asta di inizio campionato
+ - L'asta di riparazione
 
 Questi due momenti si svolgono normalmente a ottobre e febbraio.
 
 Uno degli aspetti che fa la differenza durante l'asta è il fatto di arrivare preparati: sapere chi comperare puo' fare la differenza fra concludere o meno il campionato.
 
 ## La soluzione
-Il sito che usiamo normalmente [https://www.fanta.soccer] fornisce una statistica in tempo reale del giocatori: presenze, fantamedia, gol fatti e così via.
+Il sito che usiamo normalmente [Fanta.Soccer](https://www.fanta.soccer) fornisce una statistica in tempo reale del giocatori: presenze, fantamedia, gol fatti e così via.
 
 Mancavano però alcuni dati che poteva essere interessante avere durante l'asta
 
-* Informazioni su giocatori infortunati
-* Informazioni sui rigoristi
-* Statisiche comparate rispetto all'anno precedente, anche se il giocatore giocava in serie B
-* Eventuali cambi di squadra
-* Analisi dei soli giocatori svincolati e non di tutti i giocatori disponibili
+ - Informazioni su giocatori infortunati
+ - Informazioni sui rigoristi
+ - Statisiche comparate rispetto all'anno precedente, anche se il giocatore giocava in serie B
+ - Eventuali cambi di squadra
+ - Analisi dei soli giocatori svincolati e non di tutti i giocatori disponibili
 
 Per questo motivo ho scritto un programma in grado di colmare questa lacuna.
 
