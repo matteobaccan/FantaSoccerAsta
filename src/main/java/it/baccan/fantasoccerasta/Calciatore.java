@@ -35,8 +35,8 @@ public class Calciatore {
     /**
      * @param codice the codice to set
      */
-    public void setCodice(String codice) {
-        this.codice = codice;
+    public void setCodice(String codice1) {
+        this.codice = codice1;
     }
 
     /**
@@ -49,8 +49,8 @@ public class Calciatore {
     /**
      * @param ruolo the ruolo to set
      */
-    public void setRuolo(String ruolo) {
-        this.ruolo = ruolo;
+    public void setRuolo(String ruolo1) {
+        this.ruolo = ruolo1;
     }
 
     /**
@@ -63,8 +63,8 @@ public class Calciatore {
     /**
      * @param nome the nome to set
      */
-    public void setNome(String nome) {
-        this.nome = nome;
+    public void setNome(String nome1) {
+        this.nome = nome1;
     }
 
     /**
@@ -77,8 +77,8 @@ public class Calciatore {
     /**
      * @param squadra the squadra to set
      */
-    public void setSquadra(String squadra) {
-        this.squadra = squadra;
+    public void setSquadra(String squadra1) {
+        this.squadra = squadra1;
     }
 
     /**
@@ -91,8 +91,8 @@ public class Calciatore {
     /**
      * @param fantamedia the fantamedia to set
      */
-    public void setFantamedia(String fantamedia) {
-        this.fantamedia = fantamedia;
+    public void setFantamedia(String fantamedia1) {
+        this.fantamedia = fantamedia1;
     }
 
     /**
@@ -105,8 +105,8 @@ public class Calciatore {
     /**
      * @param presenze the presenze to set
      */
-    public void setPresenze(String presenze) {
-        this.presenze = presenze;
+    public void setPresenze(String presenze1) {
+        this.presenze = presenze1;
     }
 
     /**
@@ -119,8 +119,8 @@ public class Calciatore {
     /**
      * @param infortunato the infortunato to set
      */
-    public void setInfortunato(String infortunato) {
-        this.infortunato = infortunato;
+    public void setInfortunato(String infortunato1) {
+        this.infortunato = infortunato1;
     }
 
     /**
@@ -133,8 +133,8 @@ public class Calciatore {
     /**
      * @param rigorista the rigorista to set
      */
-    public void setRigorista(String rigorista) {
-        this.rigorista = rigorista;
+    public void setRigorista(String rigorista1) {
+        this.rigorista = rigorista1;
     }
 
     /**
@@ -147,8 +147,8 @@ public class Calciatore {
     /**
      * @param evidenzia the evidenzia to set
      */
-    public void setEvidenzia(String evidenzia) {
-        this.evidenzia = evidenzia;
+    public void setEvidenzia(String evidenzia1) {
+        this.evidenzia = evidenzia1;
     }
 
     /**
@@ -161,7 +161,7 @@ public class Calciatore {
     /**
      * @param serie the serie to set
      */
-    public void setSerie(String serie) {
-        this.serie = serie;
+    public void setSerie(String serie1) {
+        this.serie = serie1;
     }
 }
