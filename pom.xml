@@ -20,14 +20,95 @@
         <maven>3.6.3</maven>
     </prerequisites>
 
+    <dependencies>
+        <!-- REST client -->
+        <dependency>
+            <groupId>com.mashape.unirest</groupId>
+            <artifactId>unirest-java</artifactId>
+            <version>1.4.9</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.13</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpasyncclient</artifactId>
+            <version>4.1.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+            <version>4.5.13</version>
+        </dependency>
+        <!-- Parsing html -->
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.14.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.22</version>
+            <type>jar</type>
+        </dependency>
+        <!-- Logger -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.32</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.6</version>
+            <type>jar</type>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>1.2.6</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.15</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.graalvm.sdk</groupId>
+            <artifactId>graal-sdk</artifactId>
+            <version>${graalvm.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- XLS -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>5.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.1.0</version>
+        </dependency>
+    </dependencies>
+
     <build>
         <finalName>${project.artifactId}-${project.version}</finalName>
         <plugins>
-<plugin>
+            <plugin>
                 <groupId>org.openrewrite.maven</groupId>
                 <artifactId>rewrite-maven-plugin</artifactId>
                 <version>4.16.0</version>
-                <executions> 
+                <executions>
                     <execution>
                         <id>validate</id>
                         <phase>validate</phase>
@@ -37,7 +118,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <!-- https://docs.openrewrite.org/reference/recipes/java -->                    
+                    <!-- https://docs.openrewrite.org/reference/recipes/java -->
                     <activeRecipes>
                         <recipe>org.openrewrite.java.cleanup.UseCollectionInterfaces</recipe>
                         <recipe>org.openrewrite.java.cleanup.HiddenField</recipe>
@@ -45,11 +126,11 @@
                         <recipe>org.openrewrite.java.cleanup.NeedBraces</recipe>
                         <recipe>org.openrewrite.java.cleanup.UseJavaStyleArrayDeclarations</recipe>
                         <recipe>org.openrewrite.java.cleanup.RemoveExtraSemicolons</recipe>
-                        <recipe>org.openrewrite.java.cleanup.NoFinalizer</recipe>             
-                        <recipe>org.openrewrite.java.cleanup.UnnecessaryParentheses</recipe>  
+                        <recipe>org.openrewrite.java.cleanup.NoFinalizer</recipe>
+                        <recipe>org.openrewrite.java.cleanup.UnnecessaryParentheses</recipe>
                         <recipe>org.openrewrite.java.cleanup.UnnecessaryCloseInTryWithResources</recipe>
                         <recipe>org.openrewrite.java.cleanup.UseDiamondOperator</recipe>
-                        <recipe>org.openrewrite.java.cleanup.MultipleVariableDeclarations</recipe>      
+                        <recipe>org.openrewrite.java.cleanup.MultipleVariableDeclarations</recipe>
                         <recipe>org.openrewrite.java.cleanup.IsEmptyCallOnCollections</recipe>
                         <recipe>org.openrewrite.java.cleanup.StaticMethodNotFinal</recipe>
                         <recipe>org.openrewrite.java.cleanup.LambdaBlockToExpression</recipe>
@@ -155,86 +236,5 @@
             </plugin>
         </plugins>
     </build>
-
-    <dependencies>
-        <!-- REST client -->
-        <dependency>
-            <groupId>com.mashape.unirest</groupId>
-            <artifactId>unirest-java</artifactId>
-            <version>1.4.9</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.13</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpasyncclient</artifactId>
-            <version>4.1.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpmime</artifactId>
-            <version>4.5.13</version>
-        </dependency>
-        <!-- Parsing html -->
-        <dependency>
-            <groupId>org.jsoup</groupId>
-            <artifactId>jsoup</artifactId>
-            <version>1.14.3</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.22</version>
-            <type>jar</type>
-        </dependency>
-        <!-- Logger -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.32</version>
-        </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.2.6</version>
-            <type>jar</type>
-        </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <version>1.2.6</version>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.15</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.graalvm.sdk</groupId>
-            <artifactId>graal-sdk</artifactId>
-            <version>${graalvm.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- XLS -->
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi</artifactId>
-            <version>5.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-ooxml</artifactId>
-            <version>5.1.0</version>
-        </dependency>
-    </dependencies>
 
 </project>
