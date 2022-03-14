@@ -12,6 +12,7 @@
 [![GraalVM Build](https://github.com/matteobaccan/FantaSoccerAsta/actions/workflows/graalvm.yml/badge.svg)](https://github.com/matteobaccan/FantaSoccerAsta/actions/workflows/graalvm.yml)
 [![Java CI with Maven](https://github.com/matteobaccan/FantaSoccerAsta/actions/workflows/maven.yml/badge.svg)](https://github.com/matteobaccan/FantaSoccerAsta/actions/workflows/maven.yml)
 [![Meterian vulnerability scan workflow](https://github.com/matteobaccan/FantaSoccerAsta/actions/workflows/meterian.yml/badge.svg)](https://github.com/matteobaccan/FantaSoccerAsta/actions/workflows/meterian.yml)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/7c58d3a8b687463c90f050a758afea62)](https://www.codacy.com/gh/matteobaccan/FantaSoccerAsta/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=matteobaccan/FantaSoccerAsta&amp;utm_campaign=Badge_Grade)
 
 Calcolo automatico liste Fanta.soccer
 
