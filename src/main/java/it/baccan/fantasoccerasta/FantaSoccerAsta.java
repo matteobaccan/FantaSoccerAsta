@@ -65,9 +65,13 @@ import org.apache.poi.ss.usermodel.Workbook;
 public class FantaSoccerAsta {
 
     private static final String SITEHOME = "https://www.fanta.soccer";
-    private static final String USERAGENT = "Mozilla/5.0 (Windows NT 6.1; rv:52.0) Gecko/20100101 Firefox/52.0";
+    private static final String USERAGENT = "User-Agent";
+    private static final String USERAGENT_VALUE = "Mozilla/5.0 (Windows NT 6.1; rv:52.0) Gecko/20100101 Firefox/52.0";
     private static final String SERIE_A = "A";
     private static final String SERIE_B = "B";
+    private static final String ACCEPT = "Accept";
+    private static final String ACCEPT_VALUE = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+    private static final String IT_STATISTICHE = "/it/statistiche/";
 
     static {
         // Inizializza Unirest
@@ -173,8 +177,8 @@ public class FantaSoccerAsta {
     private String getPage(final String url) throws UnirestException {
         log.info(" Leggo pagina [{}]", url);
         return Unirest.get(url)
-                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                .header("User-Agent", USERAGENT)
+                .header(ACCEPT, ACCEPT_VALUE)
+                .header(USERAGENT, USERAGENT_VALUE)
                 .asString()
                 .getBody();
     }
@@ -182,8 +186,8 @@ public class FantaSoccerAsta {
     private InputStream getPageStream(final String url) throws UnirestException {
         log.info(" Leggo pagina binaria [{}]", url);
         return Unirest.get(url)
-                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                .header("User-Agent", USERAGENT)
+                .header(ACCEPT, ACCEPT_VALUE)
+                .header(USERAGENT, USERAGENT_VALUE)
                 .asBinary()
                 .getBody();
     }
@@ -205,8 +209,8 @@ public class FantaSoccerAsta {
         // Faccio la post di login
         HttpResponse<String> homePage = Unirest.post(SITEHOME + "/it/login/")
                 .queryString("lang", "it")
-                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                .header("User-Agent", USERAGENT)
+                .header(ACCEPT, ACCEPT_VALUE)
+                .header(USERAGENT, USERAGENT_VALUE)
                 .field("__EVENTARGUMENT", "")
                 .field("__EVENTTARGET", "")
                 .field("__VIEWSTATE", cV)
@@ -458,7 +462,7 @@ public class FantaSoccerAsta {
         Map<String, String> ret = new HashMap<>();
 
         log.info("Prendo la pagina dei rigoristi");
-        String rigoristiPage = getPage("https://www.goal.com/it/notizie/fantacalcio-rigoristi-serie-a-20212022/1w4l88p2pqxvf1u09xou0nopa0");
+        String rigoristiPage = getPage("https://www.goal.com/it/notizie/fantacalcio-rigoristi-serie-a-2022-2023/blte4152d768d5a07d3");
 
         // Salvo l'infortunato
         Document doc = Jsoup.parse(rigoristiPage);
@@ -481,7 +485,7 @@ public class FantaSoccerAsta {
     private List<Calciatore> getAllGiocatori(final List<String> aInj, final Map<String, String> aRig) throws UnirestException {
         List<Calciatore> ret = new ArrayList<>();
         log.info("Prendo la pagina delle statistiche per l'elenco giocatori");
-        String statistichePage = getPage(SITEHOME + "/it/statistiche/");
+        String statistichePage = getPage(SITEHOME + IT_STATISTICHE);
 
         int nPosFS1 = statistichePage.indexOf("<select name=\"ctl00$MainContent$wuc_Default1$cmbGiornata\"");
         String select = "<option selected=\"selected\" value=\"";
@@ -536,7 +540,7 @@ public class FantaSoccerAsta {
 
     private String getStatistiche(final String serie, final boolean annoPrecedente, final boolean giornataPrecente) throws UnirestException {
         log.info("Prendo la pagina delle statistiche della giornata");
-        String statistichePage = getPage(SITEHOME + "/it/statistiche/");
+        String statistichePage = getPage(SITEHOME + IT_STATISTICHE);
 
         int nPosFS1 = statistichePage.indexOf("<select name=\"ctl00$MainContent$wuc_Default1$cmbGiornata\"");
         String select = "<option selected=\"selected\" value=\"";
@@ -556,7 +560,7 @@ public class FantaSoccerAsta {
 
         String stagione = getStagione(statistichePage, annoPrecedente);
 
-        String paginastatistiche = SITEHOME + "/it/statistiche/" + serie + "/" + stagione + "/Tutti/Fantamedia/Full/fs/" + giornata + "/";
+        String paginastatistiche = SITEHOME + IT_STATISTICHE + serie + "/" + stagione + "/Tutti/Fantamedia/Full/fs/" + giornata + "/";
         return getPage(paginastatistiche);
     }
 
