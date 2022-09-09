@@ -116,6 +116,9 @@ public class FantaSoccerAsta {
         try {
             log.info("Login");
 
+            // Prendo le età anagrafiche
+            Map<String, String> aEta = getEta();
+
             // Login e get dei Cookie
             doLogin(username, password);
 
@@ -132,7 +135,7 @@ public class FantaSoccerAsta {
             List<Calciatore> aAll = getAllGiocatori(aInj, aRig);
 
             // Genero il report
-            doGenerateReport(aCod, aInj, aRig, aAll);
+            doGenerateReport(aCod, aInj, aRig, aAll, aEta);
 
             log.info("Statistiche generate: vai e vinci per me");
         } catch (Exception ex) {
@@ -292,7 +295,8 @@ public class FantaSoccerAsta {
     private void doGenerateReport(final List<String> aCod,
             final List<String> aInj,
             final Map<String, String> aRig,
-            final List<Calciatore> aAll) throws UnirestException {
+            final List<Calciatore> aAll,
+            final Map<String, String> aEta) throws UnirestException {
         // Ora scarico la statistica e ordino per i migliori dell'anno
         Map<String, List<String>> giocatori = new HashMap<>();
         giocatori.put("P", new ArrayList<>());
@@ -301,7 +305,7 @@ public class FantaSoccerAsta {
         giocatori.put("A", new ArrayList<>());
 
         // Prendo le statistiche
-        List<Calciatore> corrente = getStatisticaCorrente(aInj, aRig);
+        List<Calciatore> corrente = getStatisticaCorrente(aInj, aRig, aEta);
         List<Calciatore> previous = getStatisticaPrecedente(SERIE_A);
         previous.addAll(getStatisticaPrecedente(SERIE_B));
 
@@ -319,10 +323,11 @@ public class FantaSoccerAsta {
                     }
                 });
 
-                String s = String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
+                String s = String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
                         calciatore.getRuolo(),
                         calciatore.getNome(),
                         calciatore.getSquadra(),
+                        calciatore.getEta(),
                         calciatore.getFantamedia(),
                         calciatore.getPresenze());
 
@@ -341,14 +346,14 @@ public class FantaSoccerAsta {
         goGeneraSvincolati(giocatori.get("P"), giocatori.get("D"), giocatori.get("C"), giocatori.get("A"));
     }
 
-    private List<Calciatore> getStatisticaCorrente(List<String> aInj, Map<String, String> aRig) throws UnirestException {
+    private List<Calciatore> getStatisticaCorrente(List<String> aInj, Map<String, String> aRig, Map<String, String> aEta) throws UnirestException {
         String calciatoriPage = getStatistiche(SERIE_A, false, false);
-        List<Calciatore> corrente = generaCalciatori(SERIE_A, calciatoriPage, aInj, aRig);
+        List<Calciatore> corrente = generaCalciatori(SERIE_A, calciatoriPage, aInj, aRig, aEta);
         // Se non ho le statistiche aggiornate, prendo la giornata precedente
         if (corrente.isEmpty()) {
             log.info("Le statistiche della giornata corrente non sono pronte, prendo quelle della giornata precedente");
             calciatoriPage = getStatistiche(SERIE_A, false, true);
-            corrente.addAll(generaCalciatori(SERIE_A, calciatoriPage, new ArrayList<>(), aRig));
+            corrente.addAll(generaCalciatori(SERIE_A, calciatoriPage, new ArrayList<>(), aRig, aEta));
         }
         log.info("Trovate statistiche per [{}] giocatori della stagione corrente", corrente.size());
         return corrente;
@@ -356,8 +361,8 @@ public class FantaSoccerAsta {
 
     private List<Calciatore> getStatisticaPrecedente(String serie) throws UnirestException {
         String calciatoriPagePrevious = getStatistiche(serie, true, false);
-        List<Calciatore> previous = generaCalciatori(serie, calciatoriPagePrevious, new ArrayList<>(), new HashMap<>());
-        log.info("Trovate statistiche per [{}] giocatori die serie [{}] della stagione precedente", previous.size(), serie);
+        List<Calciatore> previous = generaCalciatori(serie, calciatoriPagePrevious, new ArrayList<>(), new HashMap<>(), new HashMap<>());
+        log.info("Trovate statistiche per [{}] giocatori di serie [{}] della stagione precedente", previous.size(), serie);
         return previous;
     }
 
@@ -482,17 +487,18 @@ public class FantaSoccerAsta {
         return ret;
     }
 
+    private static final String SELECT = "<option selected=\"selected\" value=\"";
+
     private List<Calciatore> getAllGiocatori(final List<String> aInj, final Map<String, String> aRig) throws UnirestException {
         List<Calciatore> ret = new ArrayList<>();
         log.info("Prendo la pagina delle statistiche per l'elenco giocatori");
         String statistichePage = getPage(SITEHOME + IT_STATISTICHE);
 
         int nPosFS1 = statistichePage.indexOf("<select name=\"ctl00$MainContent$wuc_Default1$cmbGiornata\"");
-        String select = "<option selected=\"selected\" value=\"";
-        nPosFS1 = statistichePage.indexOf(select, nPosFS1);
-        int nPosFS2 = statistichePage.indexOf("\"", nPosFS1 + select.length());
+        nPosFS1 = statistichePage.indexOf(SELECT, nPosFS1);
+        int nPosFS2 = statistichePage.indexOf("\"", nPosFS1 + SELECT.length());
 
-        String giornata = statistichePage.substring(nPosFS1 + select.length(), nPosFS2);
+        String giornata = statistichePage.substring(nPosFS1 + SELECT.length(), nPosFS2);
 
         InputStream fantaGiocatori = getPageStream(SITEHOME + "/it/archivioquotazioni/A/" + getStagione(statistichePage, false) + "/" + giornata + "/exportexcel");
 
@@ -527,6 +533,7 @@ public class FantaSoccerAsta {
                     calciatore.setInfortunato(infortunato);
                     calciatore.setRigorista(rigorista);
                     calciatore.setEvidenzia("");
+                    calciatore.setEta("");
                     ret.add(calciatore);
                 }
             }
@@ -543,10 +550,10 @@ public class FantaSoccerAsta {
         String statistichePage = getPage(SITEHOME + IT_STATISTICHE);
 
         int nPosFS1 = statistichePage.indexOf("<select name=\"ctl00$MainContent$wuc_Default1$cmbGiornata\"");
-        String select = "<option selected=\"selected\" value=\"";
-        nPosFS1 = statistichePage.indexOf(select, nPosFS1);
-        int nPosFS2 = statistichePage.indexOf("\"", nPosFS1 + select.length());
-        String giornata = statistichePage.substring(nPosFS1 + select.length(), nPosFS2);
+
+        nPosFS1 = statistichePage.indexOf(SELECT, nPosFS1);
+        int nPosFS2 = statistichePage.indexOf("\"", nPosFS1 + SELECT.length());
+        String giornata = statistichePage.substring(nPosFS1 + SELECT.length(), nPosFS2);
         if (annoPrecedente) {
             giornata = "38";
         } else {
@@ -566,16 +573,16 @@ public class FantaSoccerAsta {
 
     private String getStagione(final String statistichePage, final boolean previous) {
         int nPosFS1 = statistichePage.indexOf("<select name=\"ctl00$MainContent$wuc_Default1$cmbStagione\"");
-        String select = "<option selected=\"selected\" value=\"";
+        String curSelect = SELECT;
         if (previous) {
-            select = "<option value=\"";
+            curSelect = "<option value=\"";
         }
-        nPosFS1 = statistichePage.indexOf(select, nPosFS1);
-        int nPosFS2 = statistichePage.indexOf("\"", nPosFS1 + select.length());
-        return statistichePage.substring(nPosFS1 + select.length(), nPosFS2);
+        nPosFS1 = statistichePage.indexOf(curSelect, nPosFS1);
+        int nPosFS2 = statistichePage.indexOf("\"", nPosFS1 + curSelect.length());
+        return statistichePage.substring(nPosFS1 + curSelect.length(), nPosFS2);
     }
 
-    private List<Calciatore> generaCalciatori(final String serie, final String calciatori, final List<String> aInj, final Map<String, String> aRig) {
+    private List<Calciatore> generaCalciatori(final String serie, final String calciatori, final List<String> aInj, final Map<String, String> aRig, final Map<String, String> aEta) {
         List<Calciatore> ret = new ArrayList<>();
 
         int tableStart = calciatori.indexOf("<table class=\"table bg-default\" id=\"statistiche-calciatori\"");
@@ -594,14 +601,14 @@ public class FantaSoccerAsta {
             Document docGiocatore = Jsoup.parse("<html><body><table>" + trGiocatore + "</table></body></html>");
             Elements td = docGiocatore.getElementsByTag("td");
 
-            if (td.size() > 0) {
+            if (!td.isEmpty()) {
                 String nome = td.get(1).text();
                 int n1 = nome.indexOf("(");
                 int n2 = nome.indexOf(")", n1);
                 String ruolo = nome.substring(n1 + 1, n2);
-                nome = nome.substring(0, n1).trim();
+                final String cognome = nome.substring(0, n1).trim();
 
-                String squadra = td.get(2).text();
+                final String squadra = td.get(2).text();
                 String fantamedia = td.get(3).text();
                 String presenze = td.get(4).text();
                 String evidenzia = getEvidenzia(presenze, fantamedia);
@@ -617,15 +624,23 @@ public class FantaSoccerAsta {
                 }
 
                 String rigorista = "";
-                String key = squadra.toUpperCase() + ":" + nome.toUpperCase();
+                String key = squadra.toUpperCase() + ":" + cognome.toUpperCase();
                 if (aRig.containsKey(key)) {
                     rigorista = "R:" + aRig.get(key);
                 }
 
+                AtomicReference<String> eta = new AtomicReference<>("");
+                aEta.forEach((t, u) -> {
+                    if (t.toUpperCase().contains(cognome.toUpperCase()) && t.toUpperCase().contains(squadra.toUpperCase())) {
+                        eta.set(u);
+                    }
+                });
+
+
                 Calciatore calciatore = new Calciatore();
                 calciatore.setCodice(codice);
                 calciatore.setRuolo(ruolo);
-                calciatore.setNome(nome);
+                calciatore.setNome(cognome);
                 calciatore.setSquadra(squadra);
                 calciatore.setFantamedia(fantamedia);
                 calciatore.setPresenze(presenze);
@@ -633,6 +648,7 @@ public class FantaSoccerAsta {
                 calciatore.setRigorista(rigorista);
                 calciatore.setEvidenzia(evidenzia);
                 calciatore.setSerie(serie);
+                calciatore.setEta(eta.get());
 
                 ret.add(calciatore);
 
@@ -675,6 +691,54 @@ public class FantaSoccerAsta {
         }
 
         return evidenzia;
+    }
+
+    private Map<String, String> getEta() throws UnirestException {
+        Map<String, String> ret = new HashMap<>();
+
+        log.info("Prendo la pagina delle squadre");
+        String squadrePage = getPage("https://www.transfermarkt.it/serie-a/startseite/wettbewerb/IT1");
+
+        // Salvo l'infortunato
+        Document doc = Jsoup.parse(squadrePage);
+        Elements tabellaSquadre = doc.getElementsByClass("items");
+        if (tabellaSquadre.isEmpty()) {
+            log.error("Tabella squadre non trovata");
+        } else {
+            Elements rigaSquadra = tabellaSquadre.get(0).getElementsByClass("hauptlink");
+            for (Element e : rigaSquadra) {
+                Elements squadre = e.getElementsByTag("a");
+                for (Element squadra : squadre) {
+                    String href = squadra.attr("href");
+                    if (href.startsWith("/")) {
+                        String squadraPage = getPage("https://www.transfermarkt.it" + href);
+
+
+                        Document docSquadra = Jsoup.parse(squadraPage);
+                        String squadraNome = docSquadra.getElementsByTag("h1").get(0).text();
+                        Elements tabellaGiocatori = docSquadra.getElementsByClass("items");
+
+                        Element giocatore = tabellaGiocatori.get(0);
+                        Elements tabellaGiocatoriTbody = giocatore.getElementsByTag("tbody");
+                        for (Element tbody : tabellaGiocatoriTbody) {
+                            Elements tabellaGiocatoriTr = tbody.getElementsByTag("tr");
+
+                            for (Element tr : tabellaGiocatoriTr) {
+                                if (!tr.getElementsByClass("zentriert").isEmpty()) {
+                                    String born = tr.getElementsByClass("zentriert").get(1).text();
+                                    born = born.substring(born.indexOf('(')).replace("(", "").replace(")", "");
+                                    String name = tr.getElementsByClass("bilderrahmen-fixed").get(0).attr("alt");
+
+                                    ret.put(squadraNome + " " + name, born);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return ret;
     }
 
 }
