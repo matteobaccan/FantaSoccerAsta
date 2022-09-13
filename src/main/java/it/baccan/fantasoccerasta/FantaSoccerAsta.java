@@ -72,6 +72,7 @@ public class FantaSoccerAsta {
     private static final String ACCEPT = "Accept";
     private static final String ACCEPT_VALUE = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
     private static final String IT_STATISTICHE = "/it/statistiche/";
+    private static final String SELECT = "<option selected=\"selected\" value=\"";
 
     static {
         // Inizializza Unirest
@@ -486,8 +487,6 @@ public class FantaSoccerAsta {
 
         return ret;
     }
-
-    private static final String SELECT = "<option selected=\"selected\" value=\"";
 
     private List<Calciatore> getAllGiocatori(final List<String> aInj, final Map<String, String> aRig) throws UnirestException {
         List<Calciatore> ret = new ArrayList<>();
