@@ -133,7 +133,7 @@ public class FantaSoccerAsta {
             Map<String, String> aRig = getRigoristi();
 
             // Prendo tutti i giocatori anche quelli senza voto
-            List<Calciatore> aAll = getAllGiocatori(aInj, aRig);
+            List<Calciatore> aAll = getAllGiocatori(aInj, aRig, aEta);
 
             // Genero il report
             doGenerateReport(aCod, aInj, aRig, aAll, aEta);
@@ -488,7 +488,7 @@ public class FantaSoccerAsta {
         return ret;
     }
 
-    private List<Calciatore> getAllGiocatori(final List<String> aInj, final Map<String, String> aRig) throws UnirestException {
+    private List<Calciatore> getAllGiocatori(final List<String> aInj, final Map<String, String> aRig, final Map<String, String> aEta) throws UnirestException {
         List<Calciatore> ret = new ArrayList<>();
         log.info("Prendo la pagina delle statistiche per l'elenco giocatori");
         String statistichePage = getPage(SITEHOME + IT_STATISTICHE);
@@ -508,7 +508,7 @@ public class FantaSoccerAsta {
                 Cell valoreCodice = row.getCell(0);
                 if (valoreCodice.getCellType() == CellType.NUMERIC) {
                     String codice = ("" + (valoreCodice.getNumericCellValue() - 1000000L)).replace(".0", "");
-                    String nome = row.getCell(1).getStringCellValue();
+                    String cognome = row.getCell(1).getStringCellValue();
                     String squadra = row.getCell(3).getStringCellValue();
 
                     String infortunato = "";
@@ -517,14 +517,22 @@ public class FantaSoccerAsta {
                     }
 
                     String rigorista = "";
-                    String key = squadra.toUpperCase() + ":" + nome.toUpperCase();
+                    String key = squadra.toUpperCase() + ":" + cognome.toUpperCase();
                     if (aRig.containsKey(key)) {
                         rigorista = "R:" + aRig.get(key);
                     }
 
+                    AtomicReference<String> eta = new AtomicReference<>("");
+                    aEta.forEach((t, u) -> {
+                        if (eta.get().isEmpty()) {
+                            if (t.toUpperCase().contains(cognome.toUpperCase()) && t.toUpperCase().contains(squadra.toUpperCase())) {
+                                eta.set(u);
+                            }
+                        }
+                    });
                     Calciatore calciatore = new Calciatore();
                     calciatore.setCodice(codice);
-                    calciatore.setNome(nome);
+                    calciatore.setNome(cognome);
                     calciatore.setSquadra(squadra);
                     calciatore.setRuolo(row.getCell(4).getStringCellValue());
                     calciatore.setPresenze("0");
@@ -532,7 +540,7 @@ public class FantaSoccerAsta {
                     calciatore.setInfortunato(infortunato);
                     calciatore.setRigorista(rigorista);
                     calciatore.setEvidenzia("");
-                    calciatore.setEta("");
+                    calciatore.setEta(eta.get());
                     ret.add(calciatore);
                 }
             }
@@ -630,11 +638,13 @@ public class FantaSoccerAsta {
 
                 AtomicReference<String> eta = new AtomicReference<>("");
                 aEta.forEach((t, u) -> {
-                    if (t.toUpperCase().contains(cognome.toUpperCase()) && t.toUpperCase().contains(squadra.toUpperCase())) {
-                        eta.set(u);
+                    if (eta.get().isEmpty()) {
+                        //log.info("[{}][{}][{}]", t.toUpperCase(), cognome.toUpperCase(), squadra.toUpperCase());
+                        if (t.toUpperCase().contains(cognome.toUpperCase()) && t.toUpperCase().contains(squadra.toUpperCase())) {
+                            eta.set(u);
+                        }
                     }
                 });
-
 
                 Calciatore calciatore = new Calciatore();
                 calciatore.setCodice(codice);
@@ -712,7 +722,6 @@ public class FantaSoccerAsta {
                     if (href.startsWith("/")) {
                         String squadraPage = getPage("https://www.transfermarkt.it" + href);
 
-
                         Document docSquadra = Jsoup.parse(squadraPage);
                         String squadraNome = docSquadra.getElementsByTag("h1").get(0).text();
                         Elements tabellaGiocatori = docSquadra.getElementsByClass("items");
@@ -728,7 +737,12 @@ public class FantaSoccerAsta {
                                     born = born.substring(born.indexOf('(')).replace("(", "").replace(")", "");
                                     String name = tr.getElementsByClass("bilderrahmen-fixed").get(0).attr("alt");
 
+                                    // Normalizzo
+                                    name = name.replace("�", "i");
+
                                     ret.put(squadraNome + " " + name, born);
+
+                                    //log.info(squadraNome + " " + name);
                                 }
                             }
                         }
@@ -740,4 +754,25 @@ public class FantaSoccerAsta {
         return ret;
     }
 
+    /*
+    private static final Charset utf8charset = Charset.forName("UTF-8");
+    private static final Charset iso88591charset = Charset.forName("ISO-8859-1");
+
+    public static String toISO8859_1(String text) {
+        try {
+
+            ByteBuffer inputBuffer = ByteBuffer.wrap(text.getBytes(utf8charset));
+            // decode UTF-8
+            CharBuffer data = utf8charset.decode(inputBuffer);
+            // encode ISO-8559-1
+            ByteBuffer outputBuffer = iso88591charset.encode(data);
+            byte[] outputData = outputBuffer.array();
+
+            return new String(outputData, iso88591charset);
+
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+     */
 }
