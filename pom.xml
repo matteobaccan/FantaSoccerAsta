@@ -138,23 +138,34 @@
                 <configuration>
                     <!-- https://docs.openrewrite.org/reference/recipes/java -->
                     <activeRecipes>
-                        <recipe>org.openrewrite.java.cleanup.UseCollectionInterfaces</recipe>
-                        <recipe>org.openrewrite.java.cleanup.HiddenField</recipe>
-                        <!-- removed MissingOverrideAnnotation -->
-                        <recipe>org.openrewrite.java.cleanup.NeedBraces</recipe>
-                        <recipe>org.openrewrite.java.cleanup.UseJavaStyleArrayDeclarations</recipe>
-                        <recipe>org.openrewrite.java.cleanup.RemoveExtraSemicolons</recipe>
-                        <recipe>org.openrewrite.java.cleanup.NoFinalizer</recipe>
+                        <recipe>org.openrewrite.staticanalysis.UseCollectionInterfaces</recipe>
+                        <recipe>org.openrewrite.staticanalysis.HiddenField</recipe>
+                        <!--
+                        <recipe>org.openrewrite.staticanalysis.MissingOverrideAnnotation</recipe>
+                        -->
+                        <recipe>org.openrewrite.staticanalysis.NeedBraces</recipe>
+                        <recipe>org.openrewrite.staticanalysis.UseJavaStyleArrayDeclarations</recipe>
+                        <recipe>org.openrewrite.staticanalysis.RemoveExtraSemicolons</recipe>
+                        <recipe>org.openrewrite.staticanalysis.NoFinalizer</recipe>
                         <recipe>org.openrewrite.java.cleanup.UnnecessaryParentheses</recipe>
-                        <recipe>org.openrewrite.java.cleanup.UnnecessaryCloseInTryWithResources</recipe>
-                        <recipe>org.openrewrite.java.cleanup.UseDiamondOperator</recipe>
-                        <recipe>org.openrewrite.java.cleanup.MultipleVariableDeclarations</recipe>
-                        <recipe>org.openrewrite.java.cleanup.IsEmptyCallOnCollections</recipe>
-                        <recipe>org.openrewrite.java.cleanup.StaticMethodNotFinal</recipe>
-                        <recipe>org.openrewrite.java.cleanup.LambdaBlockToExpression</recipe>
+                        <!--
+                        <recipe>org.openrewrite.staticanalysis.UnnecessaryCloseInTryWithResources</recipe>
+                        -->
+                        <recipe>org.openrewrite.staticanalysis.UseDiamondOperator</recipe>
+                        <recipe>org.openrewrite.staticanalysis.MultipleVariableDeclarations</recipe>
+                        <recipe>org.openrewrite.staticanalysis.IsEmptyCallOnCollections</recipe>
+                        <recipe>org.openrewrite.staticanalysis.StaticMethodNotFinal</recipe>
+                        <recipe>org.openrewrite.staticanalysis.LambdaBlockToExpression</recipe>
                         <recipe>org.openrewrite.java.format.AutoFormat</recipe>
-                    </activeRecipes>
+                    </activeRecipes>                   
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.openrewrite.recipe</groupId>
+                        <artifactId>rewrite-static-analysis</artifactId>
+                        <version>1.0.1</version>
+                    </dependency>
+                </dependencies>      
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
