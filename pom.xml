@@ -75,7 +75,7 @@
             <artifactId>logback-core</artifactId>
             <version>1.4.9</version>
         </dependency>
-        
+
         <!-- APACHE POI -->
         <!-- ERROR StatusLogger Log4j2 could not find a logging implementation. Please add log4j-core to the classpath. Using SimpleLogger to log to the console... -->
         <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-to-slf4j -->
@@ -147,7 +147,7 @@
                         <recipe>org.openrewrite.staticanalysis.UseJavaStyleArrayDeclarations</recipe>
                         <recipe>org.openrewrite.staticanalysis.RemoveExtraSemicolons</recipe>
                         <recipe>org.openrewrite.staticanalysis.NoFinalizer</recipe>
-                        <recipe>org.openrewrite.java.cleanup.UnnecessaryParentheses</recipe>
+                        <recipe>org.openrewrite.staticanalysis.UnnecessaryParentheses</recipe>
                         <!--
                         <recipe>org.openrewrite.staticanalysis.UnnecessaryCloseInTryWithResources</recipe>
                         -->
@@ -157,7 +157,7 @@
                         <recipe>org.openrewrite.staticanalysis.StaticMethodNotFinal</recipe>
                         <recipe>org.openrewrite.staticanalysis.LambdaBlockToExpression</recipe>
                         <recipe>org.openrewrite.java.format.AutoFormat</recipe>
-                    </activeRecipes>                   
+                    </activeRecipes>
                 </configuration>
                 <dependencies>
                     <dependency>
@@ -165,7 +165,7 @@
                         <artifactId>rewrite-static-analysis</artifactId>
                         <version>1.0.4</version>
                     </dependency>
-                </dependencies>      
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
